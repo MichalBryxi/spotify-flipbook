@@ -4,7 +4,8 @@ import { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import type SpotifyResolverService from 'spotify-flipbook/services/spotify-resolver';
 import type SpotifyScannableService from 'spotify-flipbook/services/spotify-scannable';
-import type { ParsedEntry, RenderInfo } from 'spotify-flipbook/types/flipbook';
+import type { RenderInfo } from 'spotify-flipbook/types/flipbook';
+import { parseFlipbookInput } from 'spotify-flipbook/utils/parse-flipbook-input';
 
 const EXAMPLE_INPUT = [
   'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC,This one reminds me of our hike in Lauterbrunnen',
@@ -33,7 +34,7 @@ export default class IndexController extends Controller {
     this.isLoading = true;
 
     try {
-      const parsedEntries = this.parseInput(this.inputText);
+      const parsedEntries = parseFlipbookInput(this.inputText);
       const resolvedEntries = await Promise.all(
         parsedEntries.map(async (entry) => {
           const track = await this.spotifyResolver.resolveTrack(entry.url);
@@ -55,20 +56,5 @@ export default class IndexController extends Controller {
     } finally {
       this.isLoading = false;
     }
-  }
-
-  private parseInput(input: string): ParsedEntry[] {
-    return input
-      .split('\n')
-      .map((line) => line.trim())
-      .filter(Boolean)
-      .map((line) => {
-        const [url = '', ...customTextParts] = line.split(',');
-
-        return {
-          url: url.trim(),
-          customText: customTextParts.join(',').trim(),
-        };
-      });
   }
 }
