@@ -97,5 +97,9 @@
   },
   "ember": {
     "edition": "octane"
+  },
+  "dependencies": {
+    "@frontile/theme": "^0.17.1",
+    "frontile": "^0.17.1"
   }
 }
