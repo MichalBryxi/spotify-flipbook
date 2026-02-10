@@ -46,6 +46,7 @@ export default class A4PagesComponent extends Component<A4PagesSignature> {
               <SongCard @entry={{slot}} />
             {{else}}
               <div
+                data-test-card-placeholder
                 class="h-[64mm] rounded-lg border border-dashed border-zinc-200 bg-zinc-50 print:border-transparent print:bg-transparent"
               ></div>
             {{/if}}

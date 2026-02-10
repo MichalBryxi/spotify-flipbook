@@ -1,0 +1,49 @@
+import { render, type TestContext } from '@ember/test-helpers';
+import { module, test } from 'qunit';
+import A4Pages from 'spotify-flipbook/components/a4-pages';
+import { setupRenderingTest } from 'spotify-flipbook/tests/helpers';
+import type { RenderInfo } from 'spotify-flipbook/types/flipbook';
+
+type A4PagesTestContext = TestContext & {
+  entries: RenderInfo[];
+};
+
+function buildEntry(index: number): RenderInfo {
+  return {
+    url: `https://open.spotify.com/track/${index}`,
+    customText: `Message ${index}`,
+    title: `Song ${index}`,
+    artists: `Artist ${index}`,
+    artworkUrl: `https://i.scdn.co/image/${index}`,
+    spotifyUri: `spotify:track:${index}`,
+    scannableUrl: `https://scannables.scdn.co/${index}`,
+  };
+}
+
+module('Integration | Component | a4-pages', function (hooks) {
+  setupRenderingTest(hooks);
+
+  test('it keeps a full 2x4 page grid using placeholders', async function (this: A4PagesTestContext, assert) {
+    this.entries = [buildEntry(1), buildEntry(2)];
+    const entries = this.entries;
+
+    await render(<template><A4Pages @entries={{entries}} /></template>);
+
+    assert.dom('.page').exists({ count: 1 });
+    assert.dom('.song-card').exists({ count: 2 });
+    assert.dom('[data-test-card-placeholder]').exists({ count: 6 });
+  });
+
+  test('it splits entries across multiple pages', async function (this: A4PagesTestContext, assert) {
+    this.entries = Array.from({ length: 9 }, (_, index) =>
+      buildEntry(index + 1)
+    );
+    const entries = this.entries;
+
+    await render(<template><A4Pages @entries={{entries}} /></template>);
+
+    assert.dom('.page').exists({ count: 2 });
+    assert.dom('.song-card').exists({ count: 9 });
+    assert.dom('[data-test-card-placeholder]').exists({ count: 7 });
+  });
+});
