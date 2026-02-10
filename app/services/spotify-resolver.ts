@@ -150,7 +150,7 @@ export default class SpotifyResolverService extends Service {
       request.signal = signal;
     }
 
-    const response = await this.store.request(
+    const response = await this.store.requestManager.request(
       withResponseType<T>(request)
     );
 

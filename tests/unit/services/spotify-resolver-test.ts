@@ -37,22 +37,24 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     this.owner.register(
       'service:store',
       class StoreStub extends Service {
-        request(requestConfig: { url: string }) {
-          assert.strictEqual(
-            requestConfig.url,
-            `https://open.spotify.com/oembed?url=${encodeURIComponent(TRACK_URL)}`
-          );
+        requestManager = {
+          request: (requestConfig: { url: string }) => {
+            assert.strictEqual(
+              requestConfig.url,
+              `https://open.spotify.com/oembed?url=${encodeURIComponent(TRACK_URL)}`
+            );
 
-          return Promise.resolve({
-            request: requestConfig,
-            response: null,
-            content: {
-              title: 'Never Gonna Give You Up',
-              author_name: 'Rick Astley',
-              thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
-            },
-          });
-        }
+            return Promise.resolve({
+              request: requestConfig,
+              response: null,
+              content: {
+                title: 'Never Gonna Give You Up',
+                author_name: 'Rick Astley',
+                thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+              },
+            });
+          },
+        };
       }
     );
 
@@ -78,37 +80,39 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     this.owner.register(
       'service:store',
       class StoreStub extends Service {
-        request(requestConfig: {
-          url: string;
-          method: string;
-          headers?: Headers;
-        }) {
-          if (
-            requestConfig.url ===
-            'https://api.spotify.com/v1/tracks/4uLU6hMCjMI75M1A2tKUQC'
-          ) {
-            assert.strictEqual(
-              requestConfig.headers?.get('Authorization'),
-              'Bearer token-123',
-              'uses provided bearer token for track request'
-            );
+        requestManager = {
+          request: (requestConfig: {
+            url: string;
+            method: string;
+            headers?: Headers;
+          }) => {
+            if (
+              requestConfig.url ===
+              'https://api.spotify.com/v1/tracks/4uLU6hMCjMI75M1A2tKUQC'
+            ) {
+              assert.strictEqual(
+                requestConfig.headers?.get('Authorization'),
+                'Bearer token-123',
+                'uses provided bearer token for track request'
+              );
 
-            return Promise.resolve({
-              request: requestConfig,
-              response: null,
-              content: {
-                name: 'Never Gonna Give You Up',
-                uri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
-                artists: [{ name: 'Rick Astley' }, { name: 'Example Artist' }],
-                album: {
-                  images: [{ url: 'https://i.scdn.co/image/high-res.jpg' }],
+              return Promise.resolve({
+                request: requestConfig,
+                response: null,
+                content: {
+                  name: 'Never Gonna Give You Up',
+                  uri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+                  artists: [{ name: 'Rick Astley' }, { name: 'Example Artist' }],
+                  album: {
+                    images: [{ url: 'https://i.scdn.co/image/high-res.jpg' }],
+                  },
                 },
-              },
-            });
-          }
+              });
+            }
 
-          throw new Error(`Unexpected request URL: ${requestConfig.url}`);
-        }
+            throw new Error(`Unexpected request URL: ${requestConfig.url}`);
+          },
+        };
       }
     );
 
@@ -134,29 +138,31 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     this.owner.register(
       'service:store',
       class StoreStub extends Service {
-        request(requestConfig: { url: string }) {
-          if (
-            requestConfig.url ===
-            'https://api.spotify.com/v1/tracks/4uLU6hMCjMI75M1A2tKUQC'
-          ) {
-            return Promise.reject(new Error('spotify web api failure'));
-          }
+        requestManager = {
+          request: (requestConfig: { url: string }) => {
+            if (
+              requestConfig.url ===
+              'https://api.spotify.com/v1/tracks/4uLU6hMCjMI75M1A2tKUQC'
+            ) {
+              return Promise.reject(new Error('spotify web api failure'));
+            }
 
-          assert.strictEqual(
-            requestConfig.url,
-            `https://open.spotify.com/oembed?url=${encodeURIComponent(TRACK_URL)}`
-          );
+            assert.strictEqual(
+              requestConfig.url,
+              `https://open.spotify.com/oembed?url=${encodeURIComponent(TRACK_URL)}`
+            );
 
-          return Promise.resolve({
-            request: requestConfig,
-            response: null,
-            content: {
-              title: 'Never Gonna Give You Up',
-              author_name: 'Rick Astley',
-              thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
-            },
-          });
-        }
+            return Promise.resolve({
+              request: requestConfig,
+              response: null,
+              content: {
+                title: 'Never Gonna Give You Up',
+                author_name: 'Rick Astley',
+                thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+              },
+            });
+          },
+        };
       }
     );
 
