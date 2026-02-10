@@ -1,5 +1,7 @@
-import Service from '@ember/service';
+import Service, { service } from '@ember/service';
+import { withResponseType } from '@warp-drive/core/request';
 import config from 'spotify-flipbook/config/environment';
+import type Store from 'spotify-flipbook/services/store';
 import type { ResolvedTrack } from 'spotify-flipbook/types/flipbook';
 
 type SpotifyOEmbedResponse = {
@@ -34,6 +36,8 @@ type TokenCache = {
 };
 
 export default class SpotifyResolverService extends Service {
+  @service declare store: Store;
+
   private tokenCache: TokenCache | null = null;
 
   async resolveTrack(
@@ -69,21 +73,14 @@ export default class SpotifyResolverService extends Service {
     const accessToken = await this.getAccessToken(credentials, signal);
     const endpoint = `https://api.spotify.com/v1/tracks/${trackId}`;
 
-    // eslint-disable-next-line warp-drive/no-external-request-patterns
-    const response = await fetch(endpoint, {
+    const payload = await this.requestJson<SpotifyTrackResponse>({
+      url: endpoint,
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
       signal,
     });
-
-    if (!response.ok) {
-      throw new Error(
-        `Spotify track request failed with status ${response.status}`
-      );
-    }
-
-    const payload = (await response.json()) as SpotifyTrackResponse;
 
     return {
       title: payload.name,
@@ -101,16 +98,11 @@ export default class SpotifyResolverService extends Service {
     const endpoint = new URL('https://open.spotify.com/oembed');
     endpoint.searchParams.set('url', url);
 
-    // eslint-disable-next-line warp-drive/no-external-request-patterns
-    const response = await fetch(endpoint.toString(), { signal });
-
-    if (!response.ok) {
-      throw new Error(
-        `Spotify oEmbed request failed with status ${response.status}`
-      );
-    }
-
-    const payload = (await response.json()) as SpotifyOEmbedResponse;
+    const payload = await this.requestJson<SpotifyOEmbedResponse>({
+      url: endpoint.toString(),
+      method: 'GET',
+      signal,
+    });
 
     return {
       title: payload.title,
@@ -155,8 +147,8 @@ export default class SpotifyResolverService extends Service {
       client_secret: credentials.clientSecret,
     });
 
-    // eslint-disable-next-line warp-drive/no-external-request-patterns
-    const response = await fetch('https://accounts.spotify.com/api/token', {
+    const payload = await this.requestJson<SpotifyTokenResponse>({
+      url: 'https://accounts.spotify.com/api/token',
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -165,13 +157,6 @@ export default class SpotifyResolverService extends Service {
       signal,
     });
 
-    if (!response.ok) {
-      throw new Error(
-        `Spotify token request failed with status ${response.status}`
-      );
-    }
-
-    const payload = (await response.json()) as SpotifyTokenResponse;
     const expiresAt = Date.now() + payload.expires_in * 1000;
 
     this.tokenCache = {
@@ -180,6 +165,35 @@ export default class SpotifyResolverService extends Service {
     };
 
     return payload.access_token;
+  }
+
+  private async requestJson<T>({
+    url,
+    method,
+    headers,
+    body,
+    signal,
+  }: {
+    url: string;
+    method: 'GET' | 'POST';
+    headers?: Record<string, string>;
+    body?: string | URLSearchParams;
+    signal?: AbortSignal;
+  }): Promise<T> {
+    const response = await this.store.request(
+      withResponseType<T>({
+        url,
+        method,
+        headers: headers ? new Headers(headers) : undefined,
+        body,
+        signal,
+        cacheOptions: {
+          reload: true,
+        },
+      })
+    );
+
+    return response.content;
   }
 
   private extractTrackId(url: string): string {
