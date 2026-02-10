@@ -7,3 +7,4 @@
 - Styling uses TailwindCSS v4.
 - Use ember-template-imports with `.gts` files for templates/components.
 - Use the latest version of Warp Drive for querying data.
+- After each logical development step, create a git commit with a very clear description of what changed, and start the commit subject with a representative emoji.
