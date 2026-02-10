@@ -19,20 +19,8 @@ export default class FlipbookPreviewComponent extends Component<FlipbookPreviewS
 
   <template>
     <section class="flex h-full flex-col gap-4 p-6 lg:p-8">
-      <header
-        class="flex items-center justify-between gap-4 border-b border-zinc-200 pb-3"
-      >
+      <header class="border-b border-zinc-200 pb-3">
         <h2 class="text-2xl font-semibold text-zinc-900">Preview</h2>
-
-        <Button
-          class="print:hidden"
-          @appearance="outlined"
-          @intent="default"
-          @onPress={{this.onPrint}}
-          data-test-print-button
-        >
-          Print
-        </Button>
       </header>
 
       <div
@@ -56,6 +44,17 @@ export default class FlipbookPreviewComponent extends Component<FlipbookPreviewS
           </p>
         {{/if}}
       </div>
+
+      <footer class="flex justify-end print:hidden">
+        <Button
+          @appearance="outlined"
+          @intent="default"
+          @onPress={{this.onPrint}}
+          data-test-print-button
+        >
+          Print
+        </Button>
+      </footer>
     </section>
   </template>
 }
