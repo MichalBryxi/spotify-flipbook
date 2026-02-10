@@ -1,6 +1,4 @@
-import Controller from '@ember/controller';
-import { action } from '@ember/object';
-import { service } from '@ember/service';
+import Service, { service } from '@ember/service';
 import { tracked } from '@glimmer/tracking';
 import type SpotifyResolverService from 'spotify-flipbook/services/spotify-resolver';
 import type SpotifyScannableService from 'spotify-flipbook/services/spotify-scannable';
@@ -8,7 +6,7 @@ import type { RenderInfo } from 'spotify-flipbook/types/flipbook';
 import { FLIPBOOK_EXAMPLE_INPUT } from 'spotify-flipbook/utils/flipbook-examples';
 import { parseFlipbookInput } from 'spotify-flipbook/utils/parse-flipbook-input';
 
-export default class IndexController extends Controller {
+export default class FlipbookStateService extends Service {
   @service declare spotifyResolver: SpotifyResolverService;
   @service declare spotifyScannable: SpotifyScannableService;
 
@@ -17,13 +15,11 @@ export default class IndexController extends Controller {
   @tracked isLoading = false;
   private generationId = 0;
 
-  @action
-  onInputTextChange(value: string): void {
+  setInputText(value: string): void {
     this.inputText = value;
   }
 
-  @action
-  async onGenerate(): Promise<void> {
+  async generate(): Promise<void> {
     const currentGenerationId = ++this.generationId;
     this.isLoading = true;
     const parsedEntries = parseFlipbookInput(this.inputText);
@@ -54,12 +50,17 @@ export default class IndexController extends Controller {
         this.entries = resolvedEntries;
       }
     } catch (error) {
-      // Basic visibility only, per v1 requirements.
       console.error('Unable to generate Spotify flipbook entries', error);
     } finally {
       if (currentGenerationId === this.generationId) {
         this.isLoading = false;
       }
     }
+  }
+}
+
+declare module '@ember/service' {
+  interface Registry {
+    'flipbook-state': FlipbookStateService;
   }
 }
