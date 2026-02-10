@@ -3,3 +3,92 @@
 @plugin "@frontile/theme/plugin/default";
 
 @source "../../node_modules/@frontile";
+
+:root {
+  --flipbook-ink: #161616;
+}
+
+body {
+  margin: 0;
+  color: var(--flipbook-ink);
+  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  background: linear-gradient(145deg, #f8f7f4 0%, #eef4f8 100%);
+}
+
+.song-card-title {
+  min-height: 2.6em;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.song-card-artists,
+.song-card-message {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.page {
+  min-height: 277mm;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+@media print {
+  @page {
+    size: a4;
+    margin: 10mm;
+  }
+
+  html,
+  body {
+    margin: 0;
+    background: #fff !important;
+  }
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  #flipbook-preview,
+  #flipbook-preview * {
+    visibility: visible !important;
+  }
+
+  #flipbook-preview {
+    position: absolute;
+    inset: 0;
+    border: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  #flipbook-preview .page {
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    break-after: page;
+    page-break-after: always;
+  }
+
+  #flipbook-preview .page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+
+  #flipbook-preview .song-card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  [data-test-print-button] {
+    display: none !important;
+  }
+}

@@ -22,8 +22,8 @@ export default class A4PagesComponent extends Component<A4PagesSignature> {
 
   <template>
     {{#each this.pages key="@index" as |entries|}}
-      <section class="page mx-auto w-full max-w-[210mm] bg-white p-4 shadow-sm">
-        <div class="grid grid-cols-2 gap-3">
+      <section class="page mx-auto mb-4 w-full max-w-[210mm] bg-white p-[6mm] shadow-sm">
+        <div class="grid grid-cols-2 gap-[3mm]">
           {{#each entries key="@index" as |entry|}}
             <SongCard @entry={{entry}} />
           {{/each}}

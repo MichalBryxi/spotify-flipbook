@@ -17,12 +17,12 @@ export default class SongCardComponent extends Component<SongCardSignature> {
   }
 
   <template>
-    <article class="song-card rounded-lg border border-zinc-300 bg-white p-3">
+    <article class="song-card flex h-[64mm] flex-col justify-between rounded-lg border border-zinc-300 bg-white p-[3mm]">
       <div class="flex gap-3">
         <img
           src={{@entry.artworkUrl}}
           alt={{this.artworkAltText}}
-          class="h-[38mm] w-[38mm] shrink-0 rounded-md object-cover"
+          class="h-[37mm] w-[37mm] shrink-0 rounded-md object-cover"
         />
 
         <div class="flex min-w-0 flex-1 flex-col gap-1">
