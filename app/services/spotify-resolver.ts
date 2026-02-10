@@ -27,6 +27,12 @@ export default class SpotifyResolverService extends Service {
     signal?: AbortSignal
   ): Promise<ResolvedTrack> {
     const trackId = this.extractTrackId(url);
+
+    if (!trackId) {
+      throw new Error('Only Spotify track URLs are supported');
+    }
+
+    const canonicalTrackUrl = this.buildCanonicalTrackUrl(trackId);
     const accessToken = this.spotifyAccessToken;
 
     if (accessToken) {
@@ -44,7 +50,7 @@ export default class SpotifyResolverService extends Service {
       }
     }
 
-    return this.resolveTrackWithOEmbed(url, trackId, signal);
+    return this.resolveTrackWithOEmbed(canonicalTrackUrl, trackId, signal);
   }
 
   private async resolveTrackWithSpotifyApi(
@@ -158,7 +164,16 @@ export default class SpotifyResolverService extends Service {
   }
 
   private extractTrackId(url: string): string {
-    const { pathname } = new URL(url);
+    const parsedUrl = new URL(url);
+
+    if (
+      parsedUrl.hostname !== 'open.spotify.com' &&
+      parsedUrl.hostname !== 'play.spotify.com'
+    ) {
+      return '';
+    }
+
+    const { pathname } = parsedUrl;
     const segments = pathname.split('/').filter(Boolean);
     const trackSegmentIndex = segments.indexOf('track');
 
@@ -166,7 +181,11 @@ export default class SpotifyResolverService extends Service {
       return segments[trackSegmentIndex + 1] ?? '';
     }
 
-    return segments[1] ?? '';
+    return '';
+  }
+
+  private buildCanonicalTrackUrl(trackId: string): string {
+    return `https://open.spotify.com/track/${trackId}`;
   }
 }
 

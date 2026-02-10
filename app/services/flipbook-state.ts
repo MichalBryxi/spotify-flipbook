@@ -35,7 +35,7 @@ export default class FlipbookStateService extends Service {
     }
 
     try {
-      const resolvedEntries = await Promise.all(
+      const resolutionResults = await Promise.allSettled(
         parsedEntries.map(async (entry) => {
           const track = await this.spotifyResolver.resolveTrack(
             entry.url,
@@ -53,7 +53,25 @@ export default class FlipbookStateService extends Service {
       );
 
       if (!controller.signal.aborted) {
-        this.entries = resolvedEntries;
+        this.entries = resolutionResults
+          .filter(
+            (
+              result
+            ): result is PromiseFulfilledResult<RenderInfo> =>
+              result.status === 'fulfilled'
+          )
+          .map((result) => result.value);
+
+        resolutionResults.forEach((result, index) => {
+          if (result.status === 'rejected' && !this.isAbortError(result.reason)) {
+            const failedEntry = parsedEntries[index];
+
+            console.warn(
+              `Skipping unresolved entry: ${failedEntry?.url ?? 'unknown URL'}`,
+              result.reason
+            );
+          }
+        });
       }
     } catch (error) {
       if (!this.isAbortError(error)) {

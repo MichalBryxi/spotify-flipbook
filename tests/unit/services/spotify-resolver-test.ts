@@ -4,6 +4,8 @@ import Service from '@ember/service';
 import { setupTest } from 'spotify-flipbook/tests/helpers';
 
 const TRACK_URL = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
+const TRACK_URL_WITH_QUERY =
+  'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=abc123&context=spotify%3Aplaylist%3Axyz';
 
 module('Unit | Service | spotify-resolver', function (hooks) {
   setupTest(hooks);
@@ -60,6 +62,44 @@ module('Unit | Service | spotify-resolver', function (hooks) {
 
     const service = this.owner.lookup('service:spotify-resolver');
     const result = await service.resolveTrack(TRACK_URL);
+
+    assert.deepEqual(result, {
+      title: 'Never Gonna Give You Up',
+      artists: 'Rick Astley',
+      artworkUrl: 'https://i.scdn.co/image/cover.jpg',
+      spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+    });
+  });
+
+  test('it uses canonical Spotify track URL for oEmbed requests', async function (assert) {
+    assert.expect(2);
+
+    this.owner.register(
+      'service:store',
+      class StoreStub extends Service {
+        requestManager = {
+          request: (requestConfig: { url: string }) => {
+            assert.strictEqual(
+              requestConfig.url,
+              `https://open.spotify.com/oembed?url=${encodeURIComponent(TRACK_URL)}`
+            );
+
+            return Promise.resolve({
+              request: requestConfig,
+              response: null,
+              content: {
+                title: 'Never Gonna Give You Up',
+                author_name: 'Rick Astley',
+                thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+              },
+            });
+          },
+        };
+      }
+    );
+
+    const service = this.owner.lookup('service:spotify-resolver');
+    const result = await service.resolveTrack(TRACK_URL_WITH_QUERY);
 
     assert.deepEqual(result, {
       title: 'Never Gonna Give You Up',
@@ -175,5 +215,14 @@ module('Unit | Service | spotify-resolver', function (hooks) {
       artworkUrl: 'https://i.scdn.co/image/cover.jpg',
       spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
     });
+  });
+
+  test('it rejects unsupported non-Spotify URLs', async function (assert) {
+    const service = this.owner.lookup('service:spotify-resolver');
+
+    await assert.rejects(
+      service.resolveTrack('https://podcastaddict.com/science-vs/episode/215465069'),
+      /Only Spotify track URLs are supported/
+    );
   });
 });
