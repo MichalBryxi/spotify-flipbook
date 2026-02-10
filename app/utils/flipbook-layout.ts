@@ -1,0 +1,3 @@
+export const CARD_COLUMNS_PER_PAGE = 2;
+export const CARD_ROWS_PER_PAGE = 4;
+export const CARDS_PER_PAGE = CARD_COLUMNS_PER_PAGE * CARD_ROWS_PER_PAGE;
