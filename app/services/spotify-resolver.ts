@@ -121,17 +121,37 @@ export default class SpotifyResolverService extends Service {
     body?: string | URLSearchParams;
     signal?: AbortSignal;
   }): Promise<T> {
+    const request = {
+      url,
+      method,
+      cacheOptions: {
+        reload: true,
+      },
+    } as {
+      url: string;
+      method: 'GET' | 'POST';
+      headers?: Headers;
+      body?: string | URLSearchParams;
+      signal?: AbortSignal;
+      cacheOptions: {
+        reload: true;
+      };
+    };
+
+    if (headers) {
+      request.headers = new Headers(headers);
+    }
+
+    if (body !== undefined) {
+      request.body = body;
+    }
+
+    if (signal) {
+      request.signal = signal;
+    }
+
     const response = await this.store.request(
-      withResponseType<T>({
-        url,
-        method,
-        headers: headers ? new Headers(headers) : undefined,
-        body,
-        signal,
-        cacheOptions: {
-          reload: true,
-        },
-      })
+      withResponseType<T>(request)
     );
 
     return response.content;
