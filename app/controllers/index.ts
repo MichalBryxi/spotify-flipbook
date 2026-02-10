@@ -41,7 +41,9 @@ export default class IndexController extends Controller {
           return {
             ...entry,
             ...track,
-            scannableUrl: this.spotifyScannable.getScannableUrl(track.spotifyUri),
+            scannableUrl: this.spotifyScannable.getScannableUrl(
+              track.spotifyUri
+            ),
           };
         })
       );

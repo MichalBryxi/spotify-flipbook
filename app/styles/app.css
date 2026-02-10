@@ -1,4 +1,4 @@
-@import "tailwindcss" source("../../");
+@import 'tailwindcss' source('../../');
 
 @plugin "@frontile/theme/plugin/default";
 
@@ -11,7 +11,7 @@
 body {
   margin: 0;
   color: var(--flipbook-ink);
-  font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  font-family: 'Avenir Next', 'Segoe UI', 'Helvetica Neue', sans-serif;
   background: linear-gradient(145deg, #f8f7f4 0%, #eef4f8 100%);
 }
 

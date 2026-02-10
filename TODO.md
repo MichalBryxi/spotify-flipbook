@@ -1,15 +1,18 @@
 # Spotify Flipbook Implementation Plan
 
 ## Objective
+
 Build a single-page Ember app that converts CSV-like Spotify track rows into a printable A4 mini-booklet preview. Each card must show artwork, title, artists, custom text, and a Spotify scannable code image.
 
 ## Step 1: Foundation and project wiring
+
 - Add all core TypeScript domain types for parsed rows, resolved tracks, and render-ready entries.
 - Ensure Tailwind + Frontile styling foundation is configured for this app (including Frontile plugin/source setup for Tailwind v4).
 - Add root-level constants for page/card layout so print and preview dimensions stay consistent.
 - Why: this creates a stable contract before UI/service work and prevents duplicated magic numbers.
 
 ## Step 2: Spotify integration services
+
 - Add `spotify-resolver` service with a single public method `resolveTrack(url: string)`.
 - Use a client-side metadata library that supports Spotify URLs; map output to a strict `ResolvedTrack` shape (`title`, `artists`, `artworkUrl`, `spotifyUri`).
 - Add `spotify-scannable` service with `getScannableUrl(spotifyUri: string)` that builds Spotify scannables SVG URLs.
@@ -17,6 +20,7 @@ Build a single-page Ember app that converts CSV-like Spotify track rows into a p
 - Why: isolates external integration from UI and keeps route/controller focused on orchestration.
 
 ## Step 3: Route/controller state orchestration
+
 - Add `index` route/controller pair for top-level app state.
 - Controller tracked state:
   - `inputText` (prefilled examples)
@@ -31,6 +35,7 @@ Build a single-page Ember app that converts CSV-like Spotify track rows into a p
 - Why: centralizes user flow in one place and keeps components presentational.
 
 ## Step 4: Presentational GTS components
+
 - Create focused components:
   - `FlipbookEditor` (left pane input + helper text + Generate button)
   - `FlipbookPreview` (right pane heading + print button + loading/empty/content)
@@ -41,6 +46,7 @@ Build a single-page Ember app that converts CSV-like Spotify track rows into a p
 - Why: components remain reusable and easy to test visually.
 
 ## Step 5: Page template and print-first layout
+
 - Build `index` template split into left/right panels.
 - Add A4 preview frame and fixed card grid (2 columns × 4 rows, 8 cards/page).
 - Implement print CSS rules:
@@ -50,11 +56,13 @@ Build a single-page Ember app that converts CSV-like Spotify track rows into a p
 - Why: print output quality is a core product requirement.
 
 ## Step 6: Verification and polish
+
 - Run lint, typecheck, and tests (`pnpm lint`, `pnpm lint:types`, `pnpm test` where feasible).
 - Verify generated markup/classes for print and screen behavior.
 - Update README with local usage notes (input format, generate, print flow).
 - Why: ensures feature is usable by others and keeps codebase standards intact.
 
 ## Commit Plan
+
 - Commit after each completed step with clear emoji-prefixed subjects.
 - Keep each commit scoped to one logical milestone.

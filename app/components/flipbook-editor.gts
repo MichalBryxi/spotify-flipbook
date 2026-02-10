@@ -29,8 +29,8 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
           Spotify Flipbook
         </h1>
         <p class="text-sm leading-6 text-zinc-600">
-          Paste one Spotify track URL per line with a custom message after a comma.
-          Generate to build a print-ready mini-booklet preview.
+          Paste one Spotify track URL per line with a custom message after a
+          comma. Generate to build a print-ready mini-booklet preview.
         </p>
       </header>
 
@@ -51,7 +51,9 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
 
       <p class="text-xs text-zinc-500">
         Format:
-        <code class="mx-1 rounded bg-zinc-100 px-1.5 py-1 font-mono text-[11px]">
+        <code
+          class="mx-1 rounded bg-zinc-100 px-1.5 py-1 font-mono text-[11px]"
+        >
           spotifyTrackUrl,custom message
         </code>
       </p>

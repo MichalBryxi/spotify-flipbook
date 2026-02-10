@@ -17,7 +17,9 @@ export default class SongCardComponent extends Component<SongCardSignature> {
   }
 
   <template>
-    <article class="song-card flex h-[64mm] flex-col justify-between rounded-lg border border-zinc-300 bg-white p-[3mm]">
+    <article
+      class="song-card flex h-[64mm] flex-col justify-between rounded-lg border border-zinc-300 bg-white p-[3mm]"
+    >
       <div class="flex gap-3">
         <img
           src={{@entry.artworkUrl}}
@@ -26,13 +28,17 @@ export default class SongCardComponent extends Component<SongCardSignature> {
         />
 
         <div class="flex min-w-0 flex-1 flex-col gap-1">
-          <h3 class="song-card-title text-[10pt] font-semibold leading-tight text-zinc-900">
+          <h3
+            class="song-card-title text-[10pt] font-semibold leading-tight text-zinc-900"
+          >
             {{@entry.title}}
           </h3>
           <p class="song-card-artists text-[8.5pt] leading-snug text-zinc-600">
             {{@entry.artists}}
           </p>
-          <p class="song-card-message text-[8.5pt] leading-snug text-zinc-700 italic">
+          <p
+            class="song-card-message text-[8.5pt] leading-snug text-zinc-700 italic"
+          >
             {{@entry.customText}}
           </p>
         </div>
