@@ -3,6 +3,7 @@ import { action } from '@ember/object';
 import { Button } from 'frontile';
 import A4Pages from 'spotify-flipbook/components/a4-pages';
 import type { RenderInfo } from 'spotify-flipbook/types/flipbook';
+import { CARDS_PER_PAGE } from 'spotify-flipbook/utils/flipbook-layout';
 
 interface FlipbookPreviewSignature {
   Args: {
@@ -12,15 +13,48 @@ interface FlipbookPreviewSignature {
 }
 
 export default class FlipbookPreviewComponent extends Component<FlipbookPreviewSignature> {
+  get entryCount(): number {
+    return this.args.entries.length;
+  }
+
+  get hasEntries(): boolean {
+    return this.entryCount > 0;
+  }
+
+  get pageCount(): number {
+    if (!this.hasEntries) {
+      return 0;
+    }
+
+    return Math.ceil(this.entryCount / CARDS_PER_PAGE);
+  }
+
+  get isPrintDisabled(): boolean {
+    return this.args.isLoading || !this.hasEntries;
+  }
+
   @action
   onPrint(): void {
+    if (this.isPrintDisabled) {
+      return;
+    }
+
     globalThis.print();
   }
 
   <template>
     <section class="flex h-full flex-col gap-4 p-6 lg:p-8">
-      <header class="border-b border-zinc-200 pb-3">
+      <header class="space-y-1 border-b border-zinc-200 pb-3">
         <h2 class="text-2xl font-semibold text-zinc-900">Preview</h2>
+        <p class="text-xs text-zinc-500">
+          {{this.entryCount}}
+          tracks
+          {{#if this.hasEntries}}
+            •
+            {{this.pageCount}}
+            pages
+          {{/if}}
+        </p>
       </header>
 
       <div
@@ -50,6 +84,7 @@ export default class FlipbookPreviewComponent extends Component<FlipbookPreviewS
           @appearance="outlined"
           @intent="default"
           @onPress={{this.onPrint}}
+          disabled={{this.isPrintDisabled}}
           data-test-print-button
         >
           Print
