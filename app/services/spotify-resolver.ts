@@ -10,12 +10,6 @@ type SpotifyOEmbedResponse = {
   thumbnail_url: string;
 };
 
-type SpotifyTokenResponse = {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
-};
-
 type SpotifyTrackResponse = {
   name: string;
   uri: string;
@@ -25,33 +19,21 @@ type SpotifyTrackResponse = {
   };
 };
 
-type SpotifyCredentials = {
-  clientId: string;
-  clientSecret: string;
-};
-
-type TokenCache = {
-  accessToken: string;
-  expiresAt: number;
-};
-
 export default class SpotifyResolverService extends Service {
   @service declare store: Store;
-
-  private tokenCache: TokenCache | null = null;
 
   async resolveTrack(
     url: string,
     signal?: AbortSignal
   ): Promise<ResolvedTrack> {
     const trackId = this.extractTrackId(url);
-    const credentials = this.spotifyCredentials;
+    const accessToken = this.spotifyAccessToken;
 
-    if (credentials) {
+    if (accessToken) {
       try {
         return await this.resolveTrackWithSpotifyApi(
           trackId,
-          credentials,
+          accessToken,
           signal
         );
       } catch (error) {
@@ -67,10 +49,9 @@ export default class SpotifyResolverService extends Service {
 
   private async resolveTrackWithSpotifyApi(
     trackId: string,
-    credentials: SpotifyCredentials,
+    accessToken: string,
     signal?: AbortSignal
   ): Promise<ResolvedTrack> {
-    const accessToken = await this.getAccessToken(credentials, signal);
     const endpoint = `https://api.spotify.com/v1/tracks/${trackId}`;
 
     const payload = await this.requestJson<SpotifyTrackResponse>({
@@ -112,59 +93,19 @@ export default class SpotifyResolverService extends Service {
     };
   }
 
-  private get spotifyCredentials(): SpotifyCredentials | null {
-    const { spotifyClientId, spotifyClientSecret } = config.APP as {
-      spotifyClientId?: string;
-      spotifyClientSecret?: string;
+  private get spotifyAccessToken(): string | null {
+    const { spotifyAccessToken } = config.APP as {
+      spotifyAccessToken?: string;
     };
 
     if (
-      typeof spotifyClientId === 'string' &&
-      spotifyClientId.length > 0 &&
-      typeof spotifyClientSecret === 'string' &&
-      spotifyClientSecret.length > 0
+      typeof spotifyAccessToken === 'string' &&
+      spotifyAccessToken.length > 0
     ) {
-      return {
-        clientId: spotifyClientId,
-        clientSecret: spotifyClientSecret,
-      };
+      return spotifyAccessToken;
     }
 
     return null;
-  }
-
-  private async getAccessToken(
-    credentials: SpotifyCredentials,
-    signal?: AbortSignal
-  ): Promise<string> {
-    if (this.tokenCache && this.tokenCache.expiresAt > Date.now() + 30_000) {
-      return this.tokenCache.accessToken;
-    }
-
-    const body = new URLSearchParams({
-      grant_type: 'client_credentials',
-      client_id: credentials.clientId,
-      client_secret: credentials.clientSecret,
-    });
-
-    const payload = await this.requestJson<SpotifyTokenResponse>({
-      url: 'https://accounts.spotify.com/api/token',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body,
-      signal,
-    });
-
-    const expiresAt = Date.now() + payload.expires_in * 1000;
-
-    this.tokenCache = {
-      accessToken: payload.access_token,
-      expiresAt,
-    };
-
-    return payload.access_token;
   }
 
   private async requestJson<T>({

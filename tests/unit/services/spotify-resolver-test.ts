@@ -8,41 +8,30 @@ const TRACK_URL = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
 module('Unit | Service | spotify-resolver', function (hooks) {
   setupTest(hooks);
 
-  let originalClientId: string | undefined;
-  let originalClientSecret: string | undefined;
+  let originalAccessToken: string | undefined;
 
   hooks.beforeEach(function () {
     const appConfig = config.APP as Record<string, unknown> & {
-      spotifyClientId?: string;
-      spotifyClientSecret?: string;
+      spotifyAccessToken?: string;
     };
 
-    originalClientId = appConfig.spotifyClientId;
-    originalClientSecret = appConfig.spotifyClientSecret;
-    delete appConfig.spotifyClientId;
-    delete appConfig.spotifyClientSecret;
+    originalAccessToken = appConfig.spotifyAccessToken;
+    delete appConfig.spotifyAccessToken;
   });
 
   hooks.afterEach(function () {
     const appConfig = config.APP as Record<string, unknown> & {
-      spotifyClientId?: string;
-      spotifyClientSecret?: string;
+      spotifyAccessToken?: string;
     };
 
-    if (originalClientId) {
-      appConfig.spotifyClientId = originalClientId;
+    if (originalAccessToken) {
+      appConfig.spotifyAccessToken = originalAccessToken;
     } else {
-      delete appConfig.spotifyClientId;
-    }
-
-    if (originalClientSecret) {
-      appConfig.spotifyClientSecret = originalClientSecret;
-    } else {
-      delete appConfig.spotifyClientSecret;
+      delete appConfig.spotifyAccessToken;
     }
   });
 
-  test('it resolves metadata through oEmbed when credentials are missing', async function (assert) {
+  test('it resolves metadata through oEmbed when access token is missing', async function (assert) {
     assert.expect(2);
 
     this.owner.register(
@@ -78,15 +67,13 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     });
   });
 
-  test('it resolves metadata through Spotify Web API when credentials are set', async function (assert) {
-    assert.expect(3);
+  test('it resolves metadata through Spotify Web API when an access token is set', async function (assert) {
+    assert.expect(2);
 
     const appConfig = config.APP as Record<string, unknown> & {
-      spotifyClientId?: string;
-      spotifyClientSecret?: string;
+      spotifyAccessToken?: string;
     };
-    appConfig.spotifyClientId = 'client-id';
-    appConfig.spotifyClientSecret = 'client-secret';
+    appConfig.spotifyAccessToken = 'token-123';
 
     this.owner.register(
       'service:store',
@@ -96,24 +83,6 @@ module('Unit | Service | spotify-resolver', function (hooks) {
           method: string;
           headers?: Headers;
         }) {
-          if (requestConfig.url === 'https://accounts.spotify.com/api/token') {
-            assert.strictEqual(
-              requestConfig.method,
-              'POST',
-              'requests access token'
-            );
-
-            return Promise.resolve({
-              request: requestConfig,
-              response: null,
-              content: {
-                access_token: 'token-123',
-                token_type: 'Bearer',
-                expires_in: 3600,
-              },
-            });
-          }
-
           if (
             requestConfig.url ===
             'https://api.spotify.com/v1/tracks/4uLU6hMCjMI75M1A2tKUQC'
@@ -121,7 +90,7 @@ module('Unit | Service | spotify-resolver', function (hooks) {
             assert.strictEqual(
               requestConfig.headers?.get('Authorization'),
               'Bearer token-123',
-              'uses bearer token for track request'
+              'uses provided bearer token for track request'
             );
 
             return Promise.resolve({
@@ -150,6 +119,54 @@ module('Unit | Service | spotify-resolver', function (hooks) {
       title: 'Never Gonna Give You Up',
       artists: 'Rick Astley, Example Artist',
       artworkUrl: 'https://i.scdn.co/image/high-res.jpg',
+      spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+    });
+  });
+
+  test('it falls back to oEmbed when Spotify Web API lookup fails', async function (assert) {
+    assert.expect(2);
+
+    const appConfig = config.APP as Record<string, unknown> & {
+      spotifyAccessToken?: string;
+    };
+    appConfig.spotifyAccessToken = 'token-123';
+
+    this.owner.register(
+      'service:store',
+      class StoreStub extends Service {
+        request(requestConfig: { url: string }) {
+          if (
+            requestConfig.url ===
+            'https://api.spotify.com/v1/tracks/4uLU6hMCjMI75M1A2tKUQC'
+          ) {
+            return Promise.reject(new Error('spotify web api failure'));
+          }
+
+          assert.strictEqual(
+            requestConfig.url,
+            `https://open.spotify.com/oembed?url=${encodeURIComponent(TRACK_URL)}`
+          );
+
+          return Promise.resolve({
+            request: requestConfig,
+            response: null,
+            content: {
+              title: 'Never Gonna Give You Up',
+              author_name: 'Rick Astley',
+              thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+            },
+          });
+        }
+      }
+    );
+
+    const service = this.owner.lookup('service:spotify-resolver');
+    const result = await service.resolveTrack(TRACK_URL);
+
+    assert.deepEqual(result, {
+      title: 'Never Gonna Give You Up',
+      artists: 'Rick Astley',
+      artworkUrl: 'https://i.scdn.co/image/cover.jpg',
       spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
     });
   });

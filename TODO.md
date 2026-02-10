@@ -75,18 +75,21 @@ Build a single-page Ember app that converts CSV-like Spotify track rows into a p
 - Introduce a small route-level workspace component to consume service state and delegate UI rendering.
 - Keep editor/preview components presentation-focused and argument-driven.
 - Why: aligns with modern Ember Polaris preference for simple, composable units and less controller-centric logic.
+- Status: completed in commit `963e02c`.
 
 ### Gap B: Manual async generation sequencing
 
 - Replace `generationId` sequencing logic with explicit cancellation using `AbortController`.
 - Ensure new generation runs cancel in-flight requests to avoid stale updates.
 - Why: removes custom race-control logic and makes async behavior explicit and maintainable.
+- Status: completed in commit `0c2a06e`.
 
 ### Gap C: Direct `fetch` with lint bypass
 
 - Refactor Spotify resolver network calls to use Warp Drive request pipeline (`store.request` + typed response handling).
 - Remove eslint disables for external fetch patterns.
 - Why: aligns with Warp Drive/Polaris request architecture and keeps transport behavior consistent.
+- Status: completed in commit `5917168`.
 
 ### Gap D: Frontend exposure of Spotify client secret
 
@@ -94,6 +97,7 @@ Build a single-page Ember app that converts CSV-like Spotify track rows into a p
 - Support optional pre-provisioned access token for enhanced metadata lookups, with oEmbed fallback.
 - Update docs and tests accordingly.
 - Why: avoids shipping confidential credentials to browser clients.
+- Status: completed in this branch (to be committed with access-token refactor).
 
 ### Execution Order
 
