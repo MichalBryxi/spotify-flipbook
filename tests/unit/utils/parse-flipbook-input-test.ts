@@ -32,4 +32,10 @@ module('Unit | Utility | parse-flipbook-input', function () {
       },
     ]);
   });
+
+  test('it returns an empty array for whitespace-only input', function (assert) {
+    const input = '   \n\n   ';
+
+    assert.deepEqual(parseFlipbookInput(input), []);
+  });
 });

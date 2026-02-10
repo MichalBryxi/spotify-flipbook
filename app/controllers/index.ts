@@ -5,24 +5,17 @@ import { tracked } from '@glimmer/tracking';
 import type SpotifyResolverService from 'spotify-flipbook/services/spotify-resolver';
 import type SpotifyScannableService from 'spotify-flipbook/services/spotify-scannable';
 import type { RenderInfo } from 'spotify-flipbook/types/flipbook';
+import { FLIPBOOK_EXAMPLE_INPUT } from 'spotify-flipbook/utils/flipbook-examples';
 import { parseFlipbookInput } from 'spotify-flipbook/utils/parse-flipbook-input';
-
-const EXAMPLE_INPUT = [
-  'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC,This one reminds me of our hike in Lauterbrunnen',
-  'https://open.spotify.com/track/3n3Ppam7vgaVa1iaRUc9Lp,For when we need a dance break in the kitchen',
-  'https://open.spotify.com/track/7lPN2DXiMsVn7XUKtOW1CS,Play this on long train rides',
-  'https://open.spotify.com/track/1cTZMwcBJT0Ka3UJPXOeeN,Sunday morning coffee soundtrack',
-  'https://open.spotify.com/track/2takcwOaAZWiXQijPHIx7B,Night drive anthem',
-  'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b,Save this for your big wins',
-].join('\n');
 
 export default class IndexController extends Controller {
   @service declare spotifyResolver: SpotifyResolverService;
   @service declare spotifyScannable: SpotifyScannableService;
 
-  @tracked inputText = EXAMPLE_INPUT;
+  @tracked inputText = FLIPBOOK_EXAMPLE_INPUT;
   @tracked entries: RenderInfo[] = [];
   @tracked isLoading = false;
+  private generationId = 0;
 
   @action
   onInputTextChange(value: string): void {
@@ -31,10 +24,18 @@ export default class IndexController extends Controller {
 
   @action
   async onGenerate(): Promise<void> {
+    const currentGenerationId = ++this.generationId;
     this.isLoading = true;
+    const parsedEntries = parseFlipbookInput(this.inputText);
+
+    if (parsedEntries.length === 0) {
+      this.entries = [];
+      this.isLoading = false;
+
+      return;
+    }
 
     try {
-      const parsedEntries = parseFlipbookInput(this.inputText);
       const resolvedEntries = await Promise.all(
         parsedEntries.map(async (entry) => {
           const track = await this.spotifyResolver.resolveTrack(entry.url);
@@ -49,12 +50,16 @@ export default class IndexController extends Controller {
         })
       );
 
-      this.entries = resolvedEntries;
+      if (currentGenerationId === this.generationId) {
+        this.entries = resolvedEntries;
+      }
     } catch (error) {
       // Basic visibility only, per v1 requirements.
       console.error('Unable to generate Spotify flipbook entries', error);
     } finally {
-      this.isLoading = false;
+      if (currentGenerationId === this.generationId) {
+        this.isLoading = false;
+      }
     }
   }
 }
