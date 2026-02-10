@@ -13,20 +13,23 @@ export default class FlipbookStateService extends Service {
   @tracked inputText = FLIPBOOK_EXAMPLE_INPUT;
   @tracked entries: RenderInfo[] = [];
   @tracked isLoading = false;
-  private generationId = 0;
+  private inFlightController: AbortController | null = null;
 
   setInputText(value: string): void {
     this.inputText = value;
   }
 
   async generate(): Promise<void> {
-    const currentGenerationId = ++this.generationId;
+    this.inFlightController?.abort();
+    const controller = new AbortController();
+    this.inFlightController = controller;
+
     this.isLoading = true;
     const parsedEntries = parseFlipbookInput(this.inputText);
 
     if (parsedEntries.length === 0) {
       this.entries = [];
-      this.isLoading = false;
+      this.finishGeneration(controller);
 
       return;
     }
@@ -34,7 +37,10 @@ export default class FlipbookStateService extends Service {
     try {
       const resolvedEntries = await Promise.all(
         parsedEntries.map(async (entry) => {
-          const track = await this.spotifyResolver.resolveTrack(entry.url);
+          const track = await this.spotifyResolver.resolveTrack(
+            entry.url,
+            controller.signal
+          );
 
           return {
             ...entry,
@@ -46,16 +52,31 @@ export default class FlipbookStateService extends Service {
         })
       );
 
-      if (currentGenerationId === this.generationId) {
+      if (!controller.signal.aborted) {
         this.entries = resolvedEntries;
       }
     } catch (error) {
-      console.error('Unable to generate Spotify flipbook entries', error);
-    } finally {
-      if (currentGenerationId === this.generationId) {
-        this.isLoading = false;
+      if (!this.isAbortError(error)) {
+        console.error('Unable to generate Spotify flipbook entries', error);
       }
+    } finally {
+      this.finishGeneration(controller);
     }
+  }
+
+  private finishGeneration(controller: AbortController): void {
+    if (this.inFlightController === controller) {
+      this.inFlightController = null;
+      this.isLoading = false;
+    }
+  }
+
+  private isAbortError(error: unknown): boolean {
+    if (error instanceof DOMException) {
+      return error.name === 'AbortError';
+    }
+
+    return false;
   }
 }
 

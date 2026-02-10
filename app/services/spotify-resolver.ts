@@ -36,13 +36,20 @@ type TokenCache = {
 export default class SpotifyResolverService extends Service {
   private tokenCache: TokenCache | null = null;
 
-  async resolveTrack(url: string): Promise<ResolvedTrack> {
+  async resolveTrack(
+    url: string,
+    signal?: AbortSignal
+  ): Promise<ResolvedTrack> {
     const trackId = this.extractTrackId(url);
     const credentials = this.spotifyCredentials;
 
     if (credentials) {
       try {
-        return await this.resolveTrackWithSpotifyApi(trackId, credentials);
+        return await this.resolveTrackWithSpotifyApi(
+          trackId,
+          credentials,
+          signal
+        );
       } catch (error) {
         console.warn(
           'Spotify Web API lookup failed, using oEmbed fallback',
@@ -51,14 +58,15 @@ export default class SpotifyResolverService extends Service {
       }
     }
 
-    return this.resolveTrackWithOEmbed(url, trackId);
+    return this.resolveTrackWithOEmbed(url, trackId, signal);
   }
 
   private async resolveTrackWithSpotifyApi(
     trackId: string,
-    credentials: SpotifyCredentials
+    credentials: SpotifyCredentials,
+    signal?: AbortSignal
   ): Promise<ResolvedTrack> {
-    const accessToken = await this.getAccessToken(credentials);
+    const accessToken = await this.getAccessToken(credentials, signal);
     const endpoint = `https://api.spotify.com/v1/tracks/${trackId}`;
 
     // eslint-disable-next-line warp-drive/no-external-request-patterns
@@ -66,6 +74,7 @@ export default class SpotifyResolverService extends Service {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
+      signal,
     });
 
     if (!response.ok) {
@@ -86,13 +95,14 @@ export default class SpotifyResolverService extends Service {
 
   private async resolveTrackWithOEmbed(
     url: string,
-    trackId: string
+    trackId: string,
+    signal?: AbortSignal
   ): Promise<ResolvedTrack> {
     const endpoint = new URL('https://open.spotify.com/oembed');
     endpoint.searchParams.set('url', url);
 
     // eslint-disable-next-line warp-drive/no-external-request-patterns
-    const response = await fetch(endpoint.toString());
+    const response = await fetch(endpoint.toString(), { signal });
 
     if (!response.ok) {
       throw new Error(
@@ -132,7 +142,8 @@ export default class SpotifyResolverService extends Service {
   }
 
   private async getAccessToken(
-    credentials: SpotifyCredentials
+    credentials: SpotifyCredentials,
+    signal?: AbortSignal
   ): Promise<string> {
     if (this.tokenCache && this.tokenCache.expiresAt > Date.now() + 30_000) {
       return this.tokenCache.accessToken;
@@ -151,6 +162,7 @@ export default class SpotifyResolverService extends Service {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
       body,
+      signal,
     });
 
     if (!response.ok) {
