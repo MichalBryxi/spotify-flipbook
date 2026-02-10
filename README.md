@@ -57,7 +57,10 @@ Print output is configured to:
 
 ## Data sources
 
-- Track metadata is resolved client-side through Spotify's `oEmbed` endpoint.
+- Track metadata is resolved client-side through Spotify Web API when
+  `SPOTIFY_CLIENT_ID` and `SPOTIFY_CLIENT_SECRET` are present at build time.
+- If credentials are missing or the API request fails, metadata falls back to
+  Spotify's `oEmbed` endpoint.
 - Spotify code images are generated using:
   - `https://scannables.scdn.co/uri/plain/svg/ffffff/black/640/{ENCODED_URI}`
 
