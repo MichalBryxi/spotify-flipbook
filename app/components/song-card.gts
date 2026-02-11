@@ -1,6 +1,6 @@
 import Component from '@glimmer/component';
 import type { RenderInfo } from 'spotify-flipbook/types/flipbook';
-
+import { Divider } from 'frontile';
 interface SongCardSignature {
   Args: {
     entry: RenderInfo;
@@ -18,13 +18,13 @@ export default class SongCardComponent extends Component<SongCardSignature> {
 
   <template>
     <article
-      class="song-card relative flex min-h-72 flex-col justify-between border border-zinc-300 bg-white px-3 pb-3 pt-8"
+      class="song-card relative flex min-h-72 flex-col justify-between border border-zinc-300 bg-white px-3 pb-3"
     >
-      <div
-        class="absolute top-2 left-1/2 h-0 w-16 -translate-x-1/2 border-t border-dashed border-zinc-300"
-      ></div>
+      <div class="py-5">
+        <Divider />
+      </div>
 
-      <div class="flex items-start justify-between gap-2">
+      <div class="flex items-start justify-between">
         <div class="min-w-0">
           <img
             src={{@entry.artworkUrl}}
