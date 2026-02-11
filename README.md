@@ -1,6 +1,6 @@
 # Spotify Flipbook
 
-Spotify Flipbook is an Ember app that turns Spotify tracks into printable cards.
+Spotify Flipbook is an [Ember app](https://emberjs.com) that turns Spotify tracks into printable cards.
 Each card contains:
 
 - Album artwork
