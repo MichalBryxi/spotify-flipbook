@@ -31,12 +31,6 @@ body {
   -webkit-line-clamp: 2;
 }
 
-.page {
-  min-height: 277mm;
-  break-inside: avoid;
-  page-break-inside: avoid;
-}
-
 @media print {
   @page {
     size: a4;
@@ -65,22 +59,6 @@ body {
     padding: 0 !important;
     overflow: visible !important;
     background: #fff !important;
-  }
-
-  #flipbook-preview .page {
-    width: 100% !important;
-    max-width: none !important;
-    min-height: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    break-after: page;
-    page-break-after: always;
-  }
-
-  #flipbook-preview .page:last-child {
-    break-after: auto;
-    page-break-after: auto;
   }
 
   #flipbook-preview .song-card {

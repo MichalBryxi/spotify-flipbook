@@ -26,18 +26,18 @@ function buildEntry(index: number): RenderInfo {
 module('Integration | Component | a4-pages', function (hooks) {
   setupRenderingTest(hooks);
 
-  test('it keeps a full 2x4 page grid using placeholders', async function (this: A4PagesTestContext, assert) {
+  test('it renders entries in a continuous card grid', async function (this: A4PagesTestContext, assert) {
     this.entries = [buildEntry(1), buildEntry(2)];
     const entries = this.entries;
 
     await render(<template><A4Pages @entries={{entries}} /></template>);
 
-    assert.dom('.page').exists({ count: 1 });
+    assert.dom('[data-test-cards-grid]').exists({ count: 1 });
     assert.dom('.song-card').exists({ count: 2 });
-    assert.dom('[data-test-card-placeholder]').exists({ count: 6 });
+    assert.dom('[data-test-card-placeholder]').doesNotExist();
   });
 
-  test('it splits entries across multiple pages', async function (this: A4PagesTestContext, assert) {
+  test('it flows all rows without page wrappers', async function (this: A4PagesTestContext, assert) {
     this.entries = Array.from({ length: 9 }, (_, index) =>
       buildEntry(index + 1)
     );
@@ -45,8 +45,8 @@ module('Integration | Component | a4-pages', function (hooks) {
 
     await render(<template><A4Pages @entries={{entries}} /></template>);
 
-    assert.dom('.page').exists({ count: 2 });
+    assert.dom('[data-test-cards-grid]').exists({ count: 1 });
     assert.dom('.song-card').exists({ count: 9 });
-    assert.dom('[data-test-card-placeholder]').exists({ count: 7 });
+    assert.dom('[data-test-card-placeholder]').doesNotExist();
   });
 });

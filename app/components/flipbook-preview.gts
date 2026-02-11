@@ -3,7 +3,6 @@ import Component from '@glimmer/component';
 import { Button } from 'frontile';
 import A4Pages from 'spotify-flipbook/components/a4-pages';
 import type { RenderInfo } from 'spotify-flipbook/types/flipbook';
-import { CARDS_PER_PAGE } from 'spotify-flipbook/utils/flipbook-layout';
 
 interface FlipbookPreviewSignature {
   Args: {
@@ -19,14 +18,6 @@ export default class FlipbookPreviewComponent extends Component<FlipbookPreviewS
 
   get hasEntries(): boolean {
     return this.entryCount > 0;
-  }
-
-  get pageCount(): number {
-    if (!this.hasEntries) {
-      return 0;
-    }
-
-    return Math.ceil(this.entryCount / CARDS_PER_PAGE);
   }
 
   get isPrintDisabled(): boolean {
@@ -49,11 +40,6 @@ export default class FlipbookPreviewComponent extends Component<FlipbookPreviewS
         <p class="text-xs text-zinc-500">
           {{this.entryCount}}
           printable tracks
-          {{#if this.hasEntries}}
-            •
-            {{this.pageCount}}
-            pages
-          {{/if}}
         </p>
       </header>
 
