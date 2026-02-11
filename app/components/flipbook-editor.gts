@@ -92,6 +92,14 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
           Paste one Spotify track URL per line with a custom message after a
           comma. Generate to build a print-ready mini-booklet preview.
         </p>
+        <a
+          href="https://github.com/MichalBryxi/spotify-flipbook"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex text-sm font-medium text-zinc-700 underline decoration-zinc-400 underline-offset-4 transition-colors hover:text-zinc-900"
+        >
+          View source on GitHub
+        </a>
       </header>
 
       <label
