@@ -61,20 +61,6 @@ body {
     background: #fff !important;
   }
 
-  #flipbook-preview .song-card {
-    break-inside: avoid-page;
-    break-inside: avoid;
-    page-break-inside: avoid;
-    -webkit-column-break-inside: avoid;
-  }
-
-  #flipbook-preview .cards-flow-grid > * {
-    break-inside: avoid-page;
-    break-inside: avoid;
-    page-break-inside: avoid;
-    -webkit-column-break-inside: avoid;
-  }
-
   [data-test-print-button] {
     display: none !important;
   }

@@ -18,7 +18,7 @@ export default class SongCardComponent extends Component<SongCardSignature> {
 
   <template>
     <article
-      class="song-card relative flex min-h-72 flex-col justify-between border border-zinc-300 bg-white px-3 pb-3"
+      class="song-card relative flex min-h-72 flex-col justify-between border border-zinc-300 bg-white px-3 pb-3 print:break-before-auto print:break-after-auto print:break-inside-avoid-page"
     >
       <div class="py-5">
         <Divider />
