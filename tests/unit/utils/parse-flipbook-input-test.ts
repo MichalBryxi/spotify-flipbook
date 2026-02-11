@@ -11,10 +11,18 @@ module('Unit | Utility | parse-flipbook-input', function () {
 
     assert.deepEqual(parseFlipbookInput(input), [
       {
+        lineNumber: 1,
+        rawLine: 'https://open.spotify.com/track/alpha,hello world',
+        excerpt: 'https://open.spotify.com/track/alpha,hello world',
         url: 'https://open.spotify.com/track/alpha',
         customText: 'hello world',
       },
       {
+        lineNumber: 3,
+        rawLine:
+          'https://open.spotify.com/track/bravo,message with, extra commas',
+        excerpt:
+          'https://open.spotify.com/track/bravo,message with, extra commas',
         url: 'https://open.spotify.com/track/bravo',
         customText: 'message with, extra commas',
       },
@@ -27,6 +35,10 @@ module('Unit | Utility | parse-flipbook-input', function () {
 
     assert.deepEqual(parseFlipbookInput(input), [
       {
+        lineNumber: 1,
+        rawLine:
+          '  https://open.spotify.com/track/charlie   ,   trimmed message   ',
+        excerpt: 'https://open.spotify.com/track/charlie   ,   trimmed message',
         url: 'https://open.spotify.com/track/charlie',
         customText: 'trimmed message',
       },

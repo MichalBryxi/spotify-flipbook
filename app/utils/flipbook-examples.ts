@@ -12,7 +12,7 @@ export const FLIPBOOK_EXAMPLE_INPUT = [
   'https://open.spotify.com/track/7A4KdLy1DXOOC5fhIdDuHz?si=nXBVDc8FTraXN6_rzi78dg,Mark',
   'https://open.spotify.com/track/0UKSse3fcKetDzXnXzE1Pv?si=lY14vd4MSpSr8c0hEAXrBA,Dagmar',
   'https://open.spotify.com/track/31ABtQJdfloNaGz7ZhXaN5?si=e7ba8b7fc8844335,Mia Nadja Massoud',
-  "https://open.spotify.com/track/1k1Bqnv2R0uJXQN4u6LKYt?si=690c422e778049aa,Helga",
+  'https://open.spotify.com/track/1k1Bqnv2R0uJXQN4u6LKYt?si=690c422e778049aa,Helga',
   'https://open.spotify.com/track/6J3HNhDBIwEX11bX8hzx5u?si=cebdf2461ff04bfa,Malu',
   'https://open.spotify.com/track/5QTxFnGygVM4jFQiBovmRo,Paweł',
   'https://open.spotify.com/track/48lymCTweL81BPnD2jkaY1?si=33bcd4a91ff245e2,Gonçalo',

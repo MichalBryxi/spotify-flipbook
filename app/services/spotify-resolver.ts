@@ -19,13 +19,18 @@ type SpotifyTrackResponse = {
   };
 };
 
+export type ResolveTrackResult = {
+  track: ResolvedTrack;
+  degradedReason: string | null;
+};
+
 export default class SpotifyResolverService extends Service {
   @service declare store: Store;
 
   async resolveTrack(
     url: string,
     signal?: AbortSignal
-  ): Promise<ResolvedTrack> {
+  ): Promise<ResolveTrackResult> {
     const trackId = this.extractTrackId(url);
 
     if (!trackId) {
@@ -37,20 +42,50 @@ export default class SpotifyResolverService extends Service {
 
     if (accessToken) {
       try {
-        return await this.resolveTrackWithSpotifyApi(
+        const track = await this.resolveTrackWithSpotifyApi(
           trackId,
           accessToken,
           signal
         );
+
+        return {
+          track,
+          degradedReason: null,
+        };
       } catch (error) {
+        if (this.isAbortError(error)) {
+          throw error;
+        }
+
         console.warn(
           'Spotify Web API lookup failed, using oEmbed fallback',
           error
         );
+
+        const track = await this.resolveTrackWithOEmbed(
+          canonicalTrackUrl,
+          trackId,
+          signal
+        );
+
+        return {
+          track,
+          degradedReason:
+            'Spotify Web API lookup failed, so metadata was resolved via oEmbed fallback.',
+        };
       }
     }
 
-    return this.resolveTrackWithOEmbed(canonicalTrackUrl, trackId, signal);
+    const track = await this.resolveTrackWithOEmbed(
+      canonicalTrackUrl,
+      trackId,
+      signal
+    );
+
+    return {
+      track,
+      degradedReason: null,
+    };
   }
 
   private async resolveTrackWithSpotifyApi(
@@ -186,6 +221,14 @@ export default class SpotifyResolverService extends Service {
 
   private buildCanonicalTrackUrl(trackId: string): string {
     return `https://open.spotify.com/track/${trackId}`;
+  }
+
+  private isAbortError(error: unknown): boolean {
+    if (error instanceof DOMException) {
+      return error.name === 'AbortError';
+    }
+
+    return false;
   }
 }
 

@@ -64,10 +64,13 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     const result = await service.resolveTrack(TRACK_URL);
 
     assert.deepEqual(result, {
-      title: 'Never Gonna Give You Up',
-      artists: 'Rick Astley',
-      artworkUrl: 'https://i.scdn.co/image/cover.jpg',
-      spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+      track: {
+        title: 'Never Gonna Give You Up',
+        artists: 'Rick Astley',
+        artworkUrl: 'https://i.scdn.co/image/cover.jpg',
+        spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+      },
+      degradedReason: null,
     });
   });
 
@@ -102,10 +105,13 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     const result = await service.resolveTrack(TRACK_URL_WITH_QUERY);
 
     assert.deepEqual(result, {
-      title: 'Never Gonna Give You Up',
-      artists: 'Rick Astley',
-      artworkUrl: 'https://i.scdn.co/image/cover.jpg',
-      spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+      track: {
+        title: 'Never Gonna Give You Up',
+        artists: 'Rick Astley',
+        artworkUrl: 'https://i.scdn.co/image/cover.jpg',
+        spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+      },
+      degradedReason: null,
     });
   });
 
@@ -142,7 +148,10 @@ module('Unit | Service | spotify-resolver', function (hooks) {
                 content: {
                   name: 'Never Gonna Give You Up',
                   uri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
-                  artists: [{ name: 'Rick Astley' }, { name: 'Example Artist' }],
+                  artists: [
+                    { name: 'Rick Astley' },
+                    { name: 'Example Artist' },
+                  ],
                   album: {
                     images: [{ url: 'https://i.scdn.co/image/high-res.jpg' }],
                   },
@@ -160,15 +169,18 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     const result = await service.resolveTrack(TRACK_URL);
 
     assert.deepEqual(result, {
-      title: 'Never Gonna Give You Up',
-      artists: 'Rick Astley, Example Artist',
-      artworkUrl: 'https://i.scdn.co/image/high-res.jpg',
-      spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+      track: {
+        title: 'Never Gonna Give You Up',
+        artists: 'Rick Astley, Example Artist',
+        artworkUrl: 'https://i.scdn.co/image/high-res.jpg',
+        spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+      },
+      degradedReason: null,
     });
   });
 
   test('it falls back to oEmbed when Spotify Web API lookup fails', async function (assert) {
-    assert.expect(2);
+    assert.expect(3);
 
     const appConfig = config.APP as Record<string, unknown> & {
       spotifyAccessToken?: string;
@@ -209,19 +221,22 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     const service = this.owner.lookup('service:spotify-resolver');
     const result = await service.resolveTrack(TRACK_URL);
 
-    assert.deepEqual(result, {
+    assert.deepEqual(result.track, {
       title: 'Never Gonna Give You Up',
       artists: 'Rick Astley',
       artworkUrl: 'https://i.scdn.co/image/cover.jpg',
       spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
     });
+    assert.strictEqual(typeof result.degradedReason, 'string');
   });
 
   test('it rejects unsupported non-Spotify URLs', async function (assert) {
     const service = this.owner.lookup('service:spotify-resolver');
 
     await assert.rejects(
-      service.resolveTrack('https://podcastaddict.com/science-vs/episode/215465069'),
+      service.resolveTrack(
+        'https://podcastaddict.com/science-vs/episode/215465069'
+      ),
       /Only Spotify track URLs are supported/
     );
   });

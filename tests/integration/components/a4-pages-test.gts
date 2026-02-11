@@ -12,6 +12,9 @@ function buildEntry(index: number): RenderInfo {
   return {
     url: `https://open.spotify.com/track/${index}`,
     customText: `Message ${index}`,
+    lineNumber: index,
+    rawLine: `https://open.spotify.com/track/${index},Message ${index}`,
+    excerpt: `https://open.spotify.com/track/${index},Message ${index}`,
     title: `Song ${index}`,
     artists: `Artist ${index}`,
     artworkUrl: `https://i.scdn.co/image/${index}`,
