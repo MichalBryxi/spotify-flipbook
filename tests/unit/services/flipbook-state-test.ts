@@ -43,16 +43,10 @@ module('Unit | Service | flipbook-state', function (hooks) {
             return Promise.resolve({
               tracks: [
                 {
-                  title: 'Playlist Song One',
-                  artists: 'Playlist Artist One',
+                  title: 'Good Playlist',
+                  artists: 'Playlist Owner',
                   artworkUrl: 'https://i.scdn.co/image/p1',
-                  spotifyUri: 'spotify:track:playlist-1',
-                },
-                {
-                  title: 'Playlist Song Two',
-                  artists: 'Playlist Artist Two',
-                  artworkUrl: 'https://i.scdn.co/image/p2',
-                  spotifyUri: 'spotify:track:playlist-2',
+                  spotifyUri: 'spotify:playlist:good-playlist',
                 },
               ],
               degradedReason: null,
@@ -110,7 +104,7 @@ module('Unit | Service | flipbook-state', function (hooks) {
     );
   });
 
-  test('it expands a playlist line into multiple printable entries', async function (assert) {
+  test('it resolves a playlist line into one printable playlist entry', async function (assert) {
     assert.expect(3);
 
     const service = this.owner.lookup('service:flipbook-state');
@@ -120,10 +114,10 @@ module('Unit | Service | flipbook-state', function (hooks) {
 
     await service.generate();
 
-    assert.strictEqual(service.entries.length, 2);
+    assert.strictEqual(service.entries.length, 1);
     assert.deepEqual(
       service.entries.map((entry) => entry.title),
-      ['Playlist Song One', 'Playlist Song Two']
+      ['Good Playlist']
     );
     assert.true(
       service.entries.every(

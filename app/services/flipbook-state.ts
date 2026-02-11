@@ -176,8 +176,7 @@ export default class FlipbookStateService extends Service {
           severity: 'error',
           message:
             'Unable to resolve this line from Spotify APIs. Check URL availability and try again.',
-          suggestion:
-            'Confirm the Spotify URL opens publicly and retry. Playlist URLs also require SPOTIFY_ACCESS_TOKEN.',
+          suggestion: 'Confirm the Spotify URL opens publicly and retry.',
           excerpt: parsedEntry.excerpt,
         };
 

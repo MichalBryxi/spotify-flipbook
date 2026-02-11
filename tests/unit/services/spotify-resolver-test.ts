@@ -240,7 +240,50 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     assert.strictEqual(typeof result.degradedReason, 'string');
   });
 
-  test('it resolves playlist tracks through Spotify Web API when an access token is set', async function (assert) {
+  test('it resolves playlist metadata through oEmbed when access token is missing', async function (assert) {
+    assert.expect(2);
+
+    this.owner.register(
+      'service:store',
+      class StoreStub extends Service {
+        requestManager = {
+          request: (requestConfig: { url: string }) => {
+            assert.strictEqual(
+              requestConfig.url,
+              `https://open.spotify.com/oembed?url=${encodeURIComponent('https://open.spotify.com/playlist/2SNR0Fi1oxGMcM740jamt4')}`
+            );
+
+            return Promise.resolve({
+              request: requestConfig,
+              response: null,
+              content: {
+                title: 'Roadtrip Mix',
+                author_name: 'Michal',
+                thumbnail_url: 'https://i.scdn.co/image/playlist-cover.jpg',
+              },
+            });
+          },
+        };
+      }
+    );
+
+    const service = this.owner.lookup('service:spotify-resolver');
+    const result = await service.resolveTracks(PLAYLIST_URL);
+
+    assert.deepEqual(result, {
+      tracks: [
+        {
+          title: 'Roadtrip Mix',
+          artists: 'Michal',
+          artworkUrl: 'https://i.scdn.co/image/playlist-cover.jpg',
+          spotifyUri: 'spotify:playlist:2SNR0Fi1oxGMcM740jamt4',
+        },
+      ],
+      degradedReason: null,
+    });
+  });
+
+  test('it resolves playlist metadata through Spotify Web API when an access token is set', async function (assert) {
     assert.expect(2);
 
     const appConfig = config.APP as Record<string, unknown> & {
@@ -254,9 +297,8 @@ module('Unit | Service | spotify-resolver', function (hooks) {
         requestManager = {
           request: (requestConfig: { url: string; headers?: Headers }) => {
             if (
-              requestConfig.url.startsWith(
-                'https://api.spotify.com/v1/playlists/2SNR0Fi1oxGMcM740jamt4/tracks'
-              )
+              requestConfig.url ===
+              'https://api.spotify.com/v1/playlists/2SNR0Fi1oxGMcM740jamt4?fields=name,uri,images(url),owner(display_name)'
             ) {
               assert.strictEqual(
                 requestConfig.headers?.get('Authorization'),
@@ -268,29 +310,14 @@ module('Unit | Service | spotify-resolver', function (hooks) {
                 request: requestConfig,
                 response: null,
                 content: {
-                  items: [
-                    {
-                      track: {
-                        name: 'Song One',
-                        uri: 'spotify:track:one',
-                        artists: [{ name: 'Artist One' }],
-                        album: {
-                          images: [{ url: 'https://i.scdn.co/image/one.jpg' }],
-                        },
-                      },
-                    },
-                    {
-                      track: {
-                        name: 'Song Two',
-                        uri: 'spotify:track:two',
-                        artists: [{ name: 'Artist Two' }],
-                        album: {
-                          images: [{ url: 'https://i.scdn.co/image/two.jpg' }],
-                        },
-                      },
-                    },
+                  name: 'Roadtrip Mix',
+                  uri: 'spotify:playlist:2SNR0Fi1oxGMcM740jamt4',
+                  images: [
+                    { url: 'https://i.scdn.co/image/playlist-cover.jpg' },
                   ],
-                  next: null,
+                  owner: {
+                    display_name: 'Michal',
+                  },
                 },
               });
             }
@@ -307,29 +334,14 @@ module('Unit | Service | spotify-resolver', function (hooks) {
     assert.deepEqual(result, {
       tracks: [
         {
-          title: 'Song One',
-          artists: 'Artist One',
-          artworkUrl: 'https://i.scdn.co/image/one.jpg',
-          spotifyUri: 'spotify:track:one',
-        },
-        {
-          title: 'Song Two',
-          artists: 'Artist Two',
-          artworkUrl: 'https://i.scdn.co/image/two.jpg',
-          spotifyUri: 'spotify:track:two',
+          title: 'Roadtrip Mix',
+          artists: 'Michal',
+          artworkUrl: 'https://i.scdn.co/image/playlist-cover.jpg',
+          spotifyUri: 'spotify:playlist:2SNR0Fi1oxGMcM740jamt4',
         },
       ],
       degradedReason: null,
     });
-  });
-
-  test('it rejects playlist resolution when access token is missing', async function (assert) {
-    const service = this.owner.lookup('service:spotify-resolver');
-
-    await assert.rejects(
-      service.resolveTracks(PLAYLIST_URL),
-      /Playlist URLs require SPOTIFY_ACCESS_TOKEN/
-    );
   });
 
   test('it rejects unsupported non-Spotify URLs', async function (assert) {

@@ -6,8 +6,8 @@ Spotify Flipbook is an [Ember app](https://emberjs.com) that runs entirely in th
 Each card contains:
 
 - Album artwork
-- Track title
-- Artist name(s)
+- Track or playlist title
+- Artist name(s) or playlist owner
 - Custom message
 - Spotify scannable code (SVG)
 
@@ -80,8 +80,8 @@ The print layout is optimized for A4 output and hides editor controls so only th
 
 - Track metadata is resolved client-side through Spotify Web API when
   `SPOTIFY_ACCESS_TOKEN` is present at build time.
-- Playlist URLs require `SPOTIFY_ACCESS_TOKEN` because Spotify `oEmbed` cannot
-  return playlist track lists.
+- Playlist cards resolve playlist metadata and generate a playlist Spotify code
+  (they are not expanded into per-song cards).
 - If no access token is configured or the API request fails, metadata falls
   back to Spotify's `oEmbed` endpoint.
 - Spotify scannable images are generated via:
