@@ -20,31 +20,37 @@ export default class SongCardComponent extends Component<SongCardSignature> {
     <article
       class="song-card flex h-[64mm] flex-col justify-between rounded-lg border border-zinc-300 bg-white p-[3mm]"
     >
-      <div class="flex gap-3">
-        <img
-          src={{@entry.artworkUrl}}
-          alt={{this.artworkAltText}}
-          class="h-[37mm] w-[37mm] shrink-0 rounded-md object-cover"
-        />
-
-        <div class="flex min-w-0 flex-1 flex-col gap-1">
+      <div class="flex items-start justify-between gap-2">
+        <div class="min-w-0">
+          <img
+            src={{@entry.artworkUrl}}
+            alt={{this.artworkAltText}}
+            class="h-[34mm] w-[34mm] shrink-0 rounded-md object-cover"
+          />
           <h3
-            class="song-card-title text-[10pt] font-semibold leading-tight text-zinc-900"
+            class="song-card-title mt-2 text-[9pt] font-normal leading-snug text-zinc-900"
           >
             {{@entry.title}}
           </h3>
-          <p class="song-card-artists text-[8.5pt] leading-snug text-zinc-600">
+          <p
+            class="song-card-artists mt-1 text-[8pt] leading-snug text-zinc-600"
+          >
             {{@entry.artists}}
           </p>
+        </div>
+
+        <div
+          class="flex min-h-[34mm] w-[11mm] items-center justify-center overflow-hidden"
+        >
           <p
-            class="song-card-message text-[8.5pt] leading-snug text-zinc-700 italic"
+            class="max-w-none whitespace-nowrap text-[9pt] font-extrabold leading-none text-stone-600 uppercase rotate-90"
           >
             {{@entry.customText}}
           </p>
         </div>
       </div>
 
-      <div class="mt-3 flex justify-center">
+      <div class="mt-2 flex justify-center">
         <img
           src={{@entry.scannableUrl}}
           alt={{this.scannableAltText}}
