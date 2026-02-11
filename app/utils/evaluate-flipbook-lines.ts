@@ -1,3 +1,4 @@
+import * as v from 'valibot';
 import type {
   FlipbookIssue,
   FlipbookLineState,
@@ -7,6 +8,7 @@ import type {
 
 const SPOTIFY_HOSTS = new Set(['open.spotify.com', 'play.spotify.com']);
 const EXCERPT_MAX_LENGTH = 120;
+const UrlSchema = v.pipe(v.string(), v.url());
 
 export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
   const lineStates: FlipbookLineState[] = [];
@@ -74,11 +76,9 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
       return;
     }
 
-    let parsedUrl: URL;
+    const parsedUrl = parseUrl(url);
 
-    try {
-      parsedUrl = new URL(url);
-    } catch {
+    if (!parsedUrl) {
       const issue = buildIssue({
         lineNumber,
         code: 'INVALID_URL',
@@ -161,6 +161,20 @@ function isSpotifyTrackUrl(url: URL): boolean {
   const segments = url.pathname.split('/').filter(Boolean);
 
   return segments[0] === 'track' && typeof segments[1] === 'string';
+}
+
+function parseUrl(value: string): URL | null {
+  const validationResult = v.safeParse(UrlSchema, value);
+
+  if (!validationResult.success) {
+    return null;
+  }
+
+  try {
+    return new URL(validationResult.output);
+  } catch {
+    return null;
+  }
 }
 
 function buildExcerpt(line: string): string {

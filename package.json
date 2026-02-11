@@ -103,6 +103,7 @@
   },
   "dependencies": {
     "@frontile/theme": "^0.17.1",
-    "frontile": "^0.17.1"
+    "frontile": "^0.17.1",
+    "valibot": "^1.2.0"
   }
 }
