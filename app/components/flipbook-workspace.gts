@@ -53,10 +53,10 @@ export default class FlipbookWorkspaceComponent extends Component {
   <template>
     <main
       id="flipbook-app"
-      class="min-h-screen bg-slate-50 text-zinc-900 print:min-h-0 print:bg-white"
+      class="flex min-h-screen flex-col bg-slate-50 text-zinc-900 print:min-h-0 print:bg-white"
     >
       <div
-        class="mx-auto flex min-h-screen w-full max-w-[1800px] flex-col lg:flex-row"
+        class="mx-auto flex w-full max-w-[1800px] flex-1 flex-col lg:flex-row"
       >
         <aside
           id="editor-panel"
@@ -85,6 +85,19 @@ export default class FlipbookWorkspaceComponent extends Component {
           />
         </section>
       </div>
+
+      <footer
+        class="border-t border-zinc-200 bg-white px-6 py-4 text-center text-sm text-zinc-600 print:hidden lg:px-8"
+      >
+        <a
+          href="https://github.com/MichalBryxi/spotify-flipbook"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-zinc-400 underline-offset-4 transition-colors hover:text-zinc-900"
+        >
+          View source on GitHub
+        </a>
+      </footer>
     </main>
   </template>
 }
