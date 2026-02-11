@@ -1,7 +1,7 @@
 export const FLIPBOOK_EXAMPLE_INPUT = [
   'https://open.spotify.com/track/3mzyPmKaFB4TgWUMzoJIjb?si=mevffLZ8QTyXUpDIhx-TiA&context=spotify%3Aplaylist%3A37i9dQZF1E8KIPw8IzPeIT,Noemi',
   'https://open.spotify.com/track/1LzNfuep1bnAUR9skqdHCK?si=e6f97b4baa9f4e52,Alice Fauconnet',
-  'https://open.spotify.com/track/1LzNfuep1bnAUR9skqdHCK?si=e6f97b4baa9f4e52,Mathieu',
+  'https://open.spotify.com/track/40lBlTma14ZloISE5Sjf2C?si=8vZtGjqiQ5aEJSf64beaRA,Mathieu',
   'https://open.spotify.com/track/1az86oPGTUWVNJ78ohyJif?si=c6461cc2f8494e96,Adrien',
   'https://open.spotify.com/track/5M3wJjJLDDnpAG2aJ0N6oV?si=V7XeQyeOTv2zJJoJ1X4G4A,Josi',
   'https://open.spotify.com/track/6AcJTLIgNpxs5ERpo03QQc?si=4c936c7f48364549,Dom',
