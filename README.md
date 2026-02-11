@@ -1,13 +1,26 @@
 # Spotify Flipbook
 
-Spotify Flipbook is a single-page Ember app for creating printable mini-booklets from Spotify tracks.
-Each generated card includes:
+Spotify Flipbook is an Ember app that turns Spotify tracks into printable cards.
+Each card contains:
 
 - Album artwork
 - Track title
 - Artist name(s)
 - Custom message
 - Spotify scannable code (SVG)
+
+## Why this is useful
+
+Spotify links are not great for physical gifts, event tables, or scrapbook-style memories.
+This project gives you a fast way to convert tracks into something tangible you can print, cut,
+share, and scan later with Spotify.
+
+Common uses:
+
+- Party or wedding music cards
+- Memory books with songs tied to moments
+- Classroom, workshop, or event handouts
+- Gift inserts with personalized messages
 
 ## Requirements
 
@@ -28,42 +41,35 @@ pnpm start
 
 Open `http://localhost:4200`.
 
-## Input format
+## How to use it
 
-Use one row per line in the left editor:
+1. Paste one line per track in the left editor using this format:
 
 ```text
 spotifyTrackUrl,custom message
 ```
 
-Example:
+2. Example:
 
 ```text
 https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC,This one reminds me of our hike in Lauterbrunnen
 ```
 
-## Generate + print flow
+3. Click `Generate`.
+4. Review the preview pages on the right.
+5. Click `Print` to open your browser print dialog.
 
-1. Paste one or more lines in the left panel.
-2. Click `Generate`.
-3. Preview pages render in the right panel as fixed A4 card grids.
-4. Click `Print` to open the browser print dialog.
+The print layout is optimized for A4 output and hides editor controls so only the cards are printed.
 
-Print output is configured to:
-
-- Use A4 pages with `10mm` margins
-- Hide the left editor and UI controls
-- Print only the preview pages with page breaks
-
-## Data sources
+## What happens under the hood
 
 - Track metadata is resolved client-side through Spotify Web API when
   `SPOTIFY_ACCESS_TOKEN` is present at build time.
 - If no access token is configured or the API request fails, metadata falls
   back to Spotify's `oEmbed` endpoint.
-- Do not ship Spotify client secrets to the browser.
-- Spotify code images are generated using:
+- Spotify scannable images are generated via:
   - `https://scannables.scdn.co/uri/plain/svg/ffffff/black/640/{ENCODED_URI}`
+- Spotify client secrets should never be shipped to the browser.
 
 ## Quality checks
 
