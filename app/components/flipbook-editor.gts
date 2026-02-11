@@ -1,16 +1,15 @@
-import Component from '@glimmer/component';
+import { on } from '@ember/modifier';
 import { action } from '@ember/object';
-import { Button, Textarea } from 'frontile';
-import type {
-  FlipbookLineState,
-  FlipbookLineStatus,
-} from 'spotify-flipbook/types/flipbook';
+import Component from '@glimmer/component';
+import { tracked } from '@glimmer/tracking';
+import { Button } from 'frontile';
+import type { FlipbookIssue } from 'spotify-flipbook/types/flipbook';
 
 interface FlipbookEditorSignature {
   Args: {
     inputText: string;
     isGenerating: boolean;
-    lineStates: FlipbookLineState[];
+    issues: FlipbookIssue[];
     lineCount: number;
     validLineCount: number;
     issueLineCount: number;
@@ -21,58 +20,66 @@ interface FlipbookEditorSignature {
 }
 
 export default class FlipbookEditorComponent extends Component<FlipbookEditorSignature> {
+  @tracked gutterScrollTop = 0;
+
+  get hasIssues(): boolean {
+    return this.args.issueLineCount > 0;
+  }
+
+  get displayLineCount(): number {
+    return Math.max(1, this.args.inputText.split('\n').length);
+  }
+
+  get lineNumberText(): string {
+    return Array.from(
+      { length: this.displayLineCount },
+      (_, index) => index + 1
+    ).join('\n');
+  }
+
+  get gutterStyle(): string {
+    return `transform: translateY(-${this.gutterScrollTop}px);`;
+  }
+
+  get summaryTextClass(): string {
+    if (this.hasIssues) {
+      return 'text-rose-700';
+    }
+
+    return 'text-zinc-700';
+  }
+
+  get summaryBoxClass(): string {
+    if (this.hasIssues) {
+      return 'border-rose-200 bg-rose-50';
+    }
+
+    return 'border-zinc-200 bg-zinc-50';
+  }
+
+  get errorIssues(): FlipbookIssue[] {
+    return this.args.issues.filter((issue) => issue.severity === 'error');
+  }
+
+  get warningIssues(): FlipbookIssue[] {
+    return this.args.issues.filter((issue) => issue.severity === 'warning');
+  }
+
   @action
-  onInput(value: string): void {
-    this.args.onInputTextChange(value);
+  onInput(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.args.onInputTextChange(textarea.value);
+  }
+
+  @action
+  onTextareaScroll(event: Event): void {
+    const textarea = event.target as HTMLTextAreaElement;
+    this.gutterScrollTop = textarea.scrollTop;
   }
 
   @action
   onGenerate(): void {
     void this.args.onGenerate();
-  }
-
-  statusLabel(status: FlipbookLineStatus): string {
-    if (status === 'invalid-input') {
-      return 'Invalid input';
-    }
-
-    if (status === 'resolving') {
-      return 'Resolving';
-    }
-
-    if (status === 'resolved') {
-      return 'Resolved';
-    }
-
-    if (status === 'degraded') {
-      return 'Degraded';
-    }
-
-    if (status === 'failed') {
-      return 'Failed';
-    }
-
-    return 'Unvalidated';
-  }
-
-  statusClass(status: FlipbookLineStatus): string {
-    if (status === 'invalid-input' || status === 'failed') {
-      return 'border-rose-200 bg-rose-50 text-rose-700';
-    }
-
-    if (status === 'degraded') {
-      return 'border-amber-200 bg-amber-50 text-amber-700';
-    }
-
-    if (status === 'resolved') {
-      return 'border-emerald-200 bg-emerald-50 text-emerald-700';
-    }
-
-    if (status === 'resolving') {
-      return 'border-blue-200 bg-blue-50 text-blue-700';
-    }
-
-    return 'border-zinc-200 bg-zinc-100 text-zinc-600';
   }
 
   <template>
@@ -87,28 +94,6 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
         </p>
       </header>
 
-      <div class="rounded-xl border border-zinc-200 bg-zinc-50 p-3">
-        <p class="text-xs font-semibold tracking-wide text-zinc-700 uppercase">
-          Line summary
-        </p>
-        <p class="mt-1 text-sm text-zinc-700" data-test-line-summary>
-          {{@lineCount}}
-          lines detected •
-          {{@validLineCount}}
-          valid,
-          {{@issueLineCount}}
-          with issues
-        </p>
-        {{#if @isStale}}
-          <p
-            class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700"
-            data-test-stale-warning
-          >
-            Input changed since last generation.
-          </p>
-        {{/if}}
-      </div>
-
       <label
         for="flipbook-input"
         class="text-xs font-semibold tracking-wide text-zinc-500 uppercase"
@@ -116,13 +101,30 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
         Input rows
       </label>
 
-      <Textarea
-        id="flipbook-input"
-        class="w-full min-h-[24rem] rounded-xl border border-zinc-200 bg-white p-4 font-mono text-sm leading-6 text-zinc-900 shadow-sm focus:border-zinc-400 focus:ring-0"
-        rows="20"
-        @value={{@inputText}}
-        @onInput={{this.onInput}}
-      />
+      <div
+        class="relative min-h-[24rem] overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm"
+      >
+        <div
+          class="pointer-events-none absolute inset-y-0 left-0 w-12 border-r border-zinc-200 bg-zinc-50 font-mono text-xs leading-6 text-zinc-500"
+        >
+          <pre
+            class="px-2 py-4 text-right"
+            style={{this.gutterStyle}}
+            data-test-line-numbers
+          >{{this.lineNumberText}}</pre>
+        </div>
+
+        <textarea
+          id="flipbook-input"
+          class="h-full min-h-[24rem] w-full resize-y overflow-x-auto pl-14 pr-4 py-4 font-mono text-sm leading-6 whitespace-pre text-zinc-900 focus:outline-none"
+          rows="20"
+          wrap="off"
+          value={{@inputText}}
+          data-test-input-textarea
+          {{on "input" this.onInput}}
+          {{on "scroll" this.onTextareaScroll}}
+        ></textarea>
+      </div>
 
       <p class="text-xs text-zinc-500">
         Format:
@@ -132,6 +134,117 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
           spotifyTrackUrl,custom message
         </code>
       </p>
+
+      <section
+        class="rounded-xl border p-4 {{this.summaryBoxClass}}"
+        data-test-editor-summary-and-issues
+      >
+        <p
+          class="text-xs font-semibold tracking-wide uppercase
+            {{if this.hasIssues 'text-rose-700' 'text-zinc-700'}}"
+        >
+          Line summary
+        </p>
+        <p
+          class="mt-1 text-sm {{this.summaryTextClass}}"
+          data-test-line-summary
+        >
+          {{@lineCount}}
+          lines detected •
+          {{@validLineCount}}
+          valid,
+          {{@issueLineCount}}
+          with issues
+        </p>
+
+        {{#if @isStale}}
+          <p
+            class="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-700"
+            data-test-stale-warning
+          >
+            Input changed since last generation.
+          </p>
+        {{/if}}
+
+        {{#if this.hasIssues}}
+          <div
+            class="mt-4 border-t border-zinc-200 pt-3"
+            data-test-editor-issues-panel
+          >
+            {{#if this.errorIssues.length}}
+              <div class="mb-4" data-test-error-issues>
+                <p
+                  class="mb-2 text-xs font-semibold tracking-wide text-rose-700 uppercase"
+                >
+                  Errors
+                </p>
+                <ul class="space-y-2">
+                  {{#each this.errorIssues key="lineNumber" as |issue|}}
+                    <li
+                      class="rounded-lg border border-rose-200 bg-rose-50 p-3"
+                    >
+                      <p class="text-xs font-semibold text-rose-700">
+                        Line
+                        {{issue.lineNumber}}
+                        •
+                        {{issue.code}}
+                      </p>
+                      <p
+                        class="mt-1 text-sm text-zinc-800"
+                      >{{issue.message}}</p>
+                      {{#if issue.suggestion}}
+                        <p class="mt-1 text-xs text-zinc-600">
+                          Fix:
+                          {{issue.suggestion}}
+                        </p>
+                      {{/if}}
+                      <p class="mt-1 truncate font-mono text-xs text-zinc-600">
+                        {{issue.excerpt}}
+                      </p>
+                    </li>
+                  {{/each}}
+                </ul>
+              </div>
+            {{/if}}
+
+            {{#if this.warningIssues.length}}
+              <div data-test-warning-issues>
+                <p
+                  class="mb-2 text-xs font-semibold tracking-wide text-amber-700 uppercase"
+                >
+                  Warnings
+                </p>
+                <ul class="space-y-2">
+                  {{#each this.warningIssues key="lineNumber" as |issue|}}
+                    <li
+                      class="rounded-lg border border-amber-200 bg-amber-50 p-3"
+                    >
+                      <p class="text-xs font-semibold text-amber-700">
+                        Line
+                        {{issue.lineNumber}}
+                        •
+                        {{issue.code}}
+                      </p>
+                      <p
+                        class="mt-1 text-sm text-zinc-800"
+                      >{{issue.message}}</p>
+                      {{#if issue.suggestion}}
+                        <p class="mt-1 text-xs text-zinc-600">
+                          Fix:
+                          {{issue.suggestion}}
+                        </p>
+                      {{/if}}
+                      <p class="mt-1 truncate font-mono text-xs text-zinc-600">
+                        {{issue.excerpt}}
+                      </p>
+                    </li>
+                  {{/each}}
+                </ul>
+              </div>
+            {{/if}}
+          </div>
+        {{/if}}
+      </section>
 
       <Button
         @intent="primary"
@@ -143,53 +256,6 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
       >
         {{if @isGenerating "Generating..." "Generate"}}
       </Button>
-
-      <section
-        class="min-h-0 flex-1 rounded-xl border border-zinc-200 bg-white p-3"
-      >
-        <h3 class="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
-          Line status
-        </h3>
-        <ul
-          class="mt-2 max-h-60 space-y-2 overflow-auto pr-1"
-          data-test-line-status-list
-        >
-          {{#if @lineStates.length}}
-            {{#each @lineStates key="lineNumber" as |lineState|}}
-              <li class="rounded-lg border border-zinc-200 bg-zinc-50 p-2">
-                <div class="flex items-center justify-between gap-2">
-                  <p class="text-xs font-medium text-zinc-700">
-                    Line
-                    {{lineState.lineNumber}}
-                  </p>
-                  <span
-                    class="rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase
-                      {{this.statusClass lineState.status}}"
-                    data-test-line-status={{lineState.lineNumber}}
-                  >
-                    {{this.statusLabel lineState.status}}
-                  </span>
-                </div>
-                <p class="mt-1 truncate font-mono text-xs text-zinc-600">
-                  {{lineState.excerpt}}
-                </p>
-                {{#if lineState.issue}}
-                  <p class="mt-1 text-xs text-zinc-700">
-                    {{lineState.issue.code}}:
-                    {{lineState.issue.message}}
-                  </p>
-                {{/if}}
-              </li>
-            {{/each}}
-          {{else}}
-            <li
-              class="rounded-lg border border-dashed border-zinc-200 p-3 text-xs text-zinc-500"
-            >
-              No non-empty lines detected yet.
-            </li>
-          {{/if}}
-        </ul>
-      </section>
     </section>
   </template>
 }

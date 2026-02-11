@@ -78,20 +78,7 @@ export default class FlipbookStateService extends Service {
       ])
     );
 
-    evaluationResult.validEntries.forEach((entry) => {
-      const lineState = lineStateByNumber.get(entry.lineNumber);
-
-      if (!lineState) {
-        return;
-      }
-
-      lineStateByNumber.set(entry.lineNumber, {
-        ...lineState,
-        status: 'resolving',
-      });
-    });
-
-    this.lineStates = Array.from(lineStateByNumber.values());
+    this.lineStates = evaluationResult.lineStates;
     this.issues = this.sortIssues(evaluationResult.issues);
 
     if (evaluationResult.validEntries.length === 0) {

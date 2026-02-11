@@ -12,10 +12,6 @@ export default class FlipbookWorkspaceComponent extends Component {
     return this.flipbookState.inputText;
   }
 
-  get lineStates() {
-    return this.flipbookState.lineStates;
-  }
-
   get issues() {
     return this.flipbookState.issues;
   }
@@ -69,7 +65,7 @@ export default class FlipbookWorkspaceComponent extends Component {
           <FlipbookEditor
             @inputText={{this.inputText}}
             @isGenerating={{this.isLoading}}
-            @lineStates={{this.lineStates}}
+            @issues={{this.issues}}
             @lineCount={{this.lineCount}}
             @validLineCount={{this.validLineCount}}
             @issueLineCount={{this.issueLineCount}}
@@ -85,7 +81,6 @@ export default class FlipbookWorkspaceComponent extends Component {
         >
           <FlipbookPreview
             @entries={{this.entries}}
-            @issues={{this.issues}}
             @isLoading={{this.isLoading}}
           />
         </section>
