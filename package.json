@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Small description for spotify-flipbook goes here",
-  "repository": "",
+  "repository": "https://github.com/MichalBryxi/spotify-flipbook",
   "license": "MIT",
   "author": "",
   "exports": {
@@ -108,5 +108,6 @@
     "@frontile/theme": "^0.17.1",
     "frontile": "^0.17.1",
     "workbox-window": "^7.4.0"
-  }
+  },
+  "homepage": "https://spotify-flipbook.netlify.app"
 }

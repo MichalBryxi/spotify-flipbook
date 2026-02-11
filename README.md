@@ -2,7 +2,7 @@
 
 ![Spotify Flipbook preview](docs/preview.png)
 
-Spotify Flipbook is an [Ember app](https://emberjs.com) that turns Spotify tracks into printable cards.
+Spotify Flipbook is an [Ember app](https://emberjs.com) that runs entirely in the browser and turns Spotify tracks into printable cards. It uses third-party Spotify endpoints to resolve track metadata and generate Spotify scannable codes.
 Each card contains:
 
 - Album artwork
@@ -23,6 +23,17 @@ Common uses:
 - Memory books with songs tied to moments
 - Classroom, workshop, or event handouts
 - Gift inserts with personalized messages
+
+## Privacy and Project Promise
+
+- No tracking
+- No analytics
+- No ads
+- No data monetization
+- No paywall now or in the future
+- No premium paid-only features now or in the future
+
+This project is for everyone and intended to remain free forever.
 
 ## Requirements
 
