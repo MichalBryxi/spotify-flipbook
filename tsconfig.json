@@ -1,22 +1,12 @@
 {
   "extends": "@ember/app-tsconfig",
-  "include": [
-    "app",
-    "tests",
-    "types"
-  ],
+  "include": ["app", "tests", "types", "pwa-assets.config.ts"],
   "compilerOptions": {
     "allowJs": true,
     "paths": {
-      "spotify-flipbook/tests/*": [
-        "./tests/*"
-      ],
-      "spotify-flipbook/*": [
-        "./app/*"
-      ],
-      "*": [
-        "./types/*"
-      ]
+      "spotify-flipbook/tests/*": ["./tests/*"],
+      "spotify-flipbook/*": ["./app/*"],
+      "*": ["./types/*"]
     },
     "types": [
       "ember-source/types",

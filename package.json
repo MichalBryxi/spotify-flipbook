@@ -28,7 +28,8 @@
     "lint:js:fix": "eslint . --fix",
     "lint:types": "ember-tsc --noEmit",
     "start": "vite",
-    "test": "vite build --mode development && ember test --path dist"
+    "test": "vite build --mode development && ember test --path dist",
+    "generate:pwa-assets": "pwa-assets-generator"
   },
   "devDependencies": {
     "@babel/core": "^7.28.6",
@@ -105,6 +106,7 @@
   },
   "dependencies": {
     "@frontile/theme": "^0.17.1",
-    "frontile": "^0.17.1"
+    "frontile": "^0.17.1",
+    "workbox-window": "^7.4.0"
   }
 }
