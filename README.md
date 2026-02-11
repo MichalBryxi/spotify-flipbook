@@ -40,6 +40,7 @@ pnpm start
 ```
 
 Open `http://localhost:4200`.
+Live app: `https://spotify-flipbook.netlify.app`.
 
 ## How to use it
 
