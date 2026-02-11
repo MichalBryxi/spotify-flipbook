@@ -21,8 +21,11 @@ export const FLIPBOOK_EXAMPLE_INPUT = [
   'https://open.spotify.com/track/3e0FzZjTXOUtiJGSClOBrI?si=IPwMsAI-QCyuJdLzXfRDdA,Suus',
   'https://open.spotify.com/track/5MsTAcqMWtYoVKLUKucH4d?si=8c460529719d4aa0,Raffi',
   'https://open.spotify.com/track/0oEp3d8au0a3Qp78F2QxtB?si=a598dcaaeba54ee2,Flipp',
-  'https://podcastaddict.com/science-vs/episode/215465069,Jana',
+  'https://open.spotify.com/episode/2aTq56bHeq65YkcAHCq9bd?si=c23fca2edcfc4591,Jana',
   'https://open.spotify.com/track/67UOlZLz6tDEDuScefmWDd?si=PtTavdf_TsyakDtrBuOeew,Christine',
   'https://open.spotify.com/track/4ioQKdmkdBTkqjhfHeu4YU?si=QNM9jWmAR9GYeX4B9GIqdQ,Lucien',
   'https://open.spotify.com/track/5mdooqkfMvf7LtIFKReUYg?si=7KibBpTSSmmK5N0FOnl76Q,Janneke',
+  'https://open.spotify.com/track/3r0S9KmnTN5I9ohMd37d1f?si=4efL9SzYTe-TeNj8ZYYH-w,Jost Mario',
+  'https://open.spotify.com/track/6Zw0NBdfr1VlVJjDRFwUe1?si=xIfifwrTRYOK7BCe1NCWvQ,Tom',
+  'https://open.spotify.com/track/0RcYEWXtbu4ehdv1tiBOi0?si=9638fd22fa1648e1,Fred',
 ].join('\n');
