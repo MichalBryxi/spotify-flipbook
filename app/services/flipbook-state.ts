@@ -92,7 +92,7 @@ export default class FlipbookStateService extends Service {
     try {
       const resolutionResults = await Promise.allSettled(
         evaluationResult.validEntries.map(async (entry) => {
-          const resolution = await this.spotifyResolver.resolveTrack(
+          const resolution = await this.spotifyResolver.resolveTracks(
             entry.url,
             controller.signal
           );
@@ -125,16 +125,16 @@ export default class FlipbookStateService extends Service {
         }
 
         if (result.status === 'fulfilled') {
-          const { track, degradedReason } = result.value.resolution;
-          const renderInfo: RenderInfo = {
+          const { tracks, degradedReason } = result.value.resolution;
+          const resolvedEntries = tracks.map((track) => ({
             ...parsedEntry,
             ...track,
             scannableUrl: this.spotifyScannable.getScannableUrl(
               track.spotifyUri
             ),
-          };
+          }));
 
-          nextEntries.push(renderInfo);
+          nextEntries.push(...resolvedEntries);
 
           if (degradedReason) {
             const degradedIssue: FlipbookIssue = {
@@ -177,7 +177,7 @@ export default class FlipbookStateService extends Service {
           message:
             'Unable to resolve this line from Spotify APIs. Check URL availability and try again.',
           suggestion:
-            'Confirm the track URL opens publicly on Spotify, then regenerate.',
+            'Confirm the Spotify URL opens publicly and retry. Playlist URLs also require SPOTIFY_ACCESS_TOKEN.',
           excerpt: parsedEntry.excerpt,
         };
 

@@ -19,24 +19,41 @@ type SpotifyTrackResponse = {
   };
 };
 
-export type ResolveTrackResult = {
-  track: ResolvedTrack;
+type SpotifyPlaylistTracksResponse = {
+  items: Array<{
+    track: SpotifyTrackResponse | null;
+  }>;
+  next: string | null;
+};
+
+type SpotifyInputResource = {
+  kind: 'track' | 'playlist';
+  id: string;
+};
+
+export type ResolveTracksResult = {
+  tracks: ResolvedTrack[];
   degradedReason: string | null;
 };
 
 export default class SpotifyResolverService extends Service {
   @service declare store: Store;
 
-  async resolveTrack(
+  async resolveTracks(
     url: string,
     signal?: AbortSignal
-  ): Promise<ResolveTrackResult> {
-    const trackId = this.extractTrackId(url);
+  ): Promise<ResolveTracksResult> {
+    const resource = this.extractResource(url);
 
-    if (!trackId) {
-      throw new Error('Only Spotify track URLs are supported');
+    if (!resource) {
+      throw new Error('Only Spotify track and playlist URLs are supported');
     }
 
+    if (resource.kind === 'playlist') {
+      return this.resolvePlaylist(resource.id, signal);
+    }
+
+    const trackId = resource.id;
     const canonicalTrackUrl = this.buildCanonicalTrackUrl(trackId);
     const accessToken = this.spotifyAccessToken;
 
@@ -49,7 +66,7 @@ export default class SpotifyResolverService extends Service {
         );
 
         return {
-          track,
+          tracks: [track],
           degradedReason: null,
         };
       } catch (error) {
@@ -69,7 +86,7 @@ export default class SpotifyResolverService extends Service {
         );
 
         return {
-          track,
+          tracks: [track],
           degradedReason:
             'Spotify Web API lookup failed, so metadata was resolved via oEmbed fallback.',
         };
@@ -83,7 +100,31 @@ export default class SpotifyResolverService extends Service {
     );
 
     return {
-      track,
+      tracks: [track],
+      degradedReason: null,
+    };
+  }
+
+  private async resolvePlaylist(
+    playlistId: string,
+    signal?: AbortSignal
+  ): Promise<ResolveTracksResult> {
+    const accessToken = this.spotifyAccessToken;
+
+    if (!accessToken) {
+      throw new Error(
+        'Playlist URLs require SPOTIFY_ACCESS_TOKEN so tracks can be resolved from Spotify Web API.'
+      );
+    }
+
+    const tracks = await this.resolvePlaylistWithSpotifyApi(
+      playlistId,
+      accessToken,
+      signal
+    );
+
+    return {
+      tracks,
       degradedReason: null,
     };
   }
@@ -104,12 +145,48 @@ export default class SpotifyResolverService extends Service {
       signal,
     });
 
-    return {
-      title: payload.name,
-      artists: payload.artists.map(({ name }) => name).join(', '),
-      artworkUrl: payload.album.images[0]?.url ?? '',
-      spotifyUri: payload.uri,
-    };
+    return this.mapSpotifyTrackResponse(payload);
+  }
+
+  private async resolvePlaylistWithSpotifyApi(
+    playlistId: string,
+    accessToken: string,
+    signal?: AbortSignal
+  ): Promise<ResolvedTrack[]> {
+    const tracks: ResolvedTrack[] = [];
+    let endpoint: string | null =
+      `https://api.spotify.com/v1/playlists/${playlistId}/tracks` +
+      '?fields=items(track(name,uri,artists(name),album(images(url)))),next&limit=100';
+
+    while (endpoint) {
+      const payload: SpotifyPlaylistTracksResponse =
+        await this.requestJson<SpotifyPlaylistTracksResponse>({
+          url: endpoint,
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+          signal,
+        });
+
+      payload.items.forEach(
+        ({ track }: { track: SpotifyTrackResponse | null }) => {
+          if (!track || !track.uri.startsWith('spotify:track:')) {
+            return;
+          }
+
+          tracks.push(this.mapSpotifyTrackResponse(track));
+        }
+      );
+
+      endpoint = payload.next;
+    }
+
+    if (tracks.length === 0) {
+      throw new Error('Playlist has no playable Spotify tracks');
+    }
+
+    return tracks;
   }
 
   private async resolveTrackWithOEmbed(
@@ -198,29 +275,59 @@ export default class SpotifyResolverService extends Service {
     return response.content;
   }
 
-  private extractTrackId(url: string): string {
+  private extractResource(url: string): SpotifyInputResource | null {
     const parsedUrl = new URL(url);
 
     if (
       parsedUrl.hostname !== 'open.spotify.com' &&
       parsedUrl.hostname !== 'play.spotify.com'
     ) {
-      return '';
+      return null;
     }
 
     const { pathname } = parsedUrl;
     const segments = pathname.split('/').filter(Boolean);
     const trackSegmentIndex = segments.indexOf('track');
+    const playlistSegmentIndex = segments.indexOf('playlist');
 
     if (trackSegmentIndex >= 0) {
-      return segments[trackSegmentIndex + 1] ?? '';
+      const trackId = segments[trackSegmentIndex + 1];
+
+      if (typeof trackId === 'string' && trackId.length > 0) {
+        return {
+          kind: 'track',
+          id: trackId,
+        };
+      }
     }
 
-    return '';
+    if (playlistSegmentIndex >= 0) {
+      const playlistId = segments[playlistSegmentIndex + 1];
+
+      if (typeof playlistId === 'string' && playlistId.length > 0) {
+        return {
+          kind: 'playlist',
+          id: playlistId,
+        };
+      }
+    }
+
+    return null;
   }
 
   private buildCanonicalTrackUrl(trackId: string): string {
     return `https://open.spotify.com/track/${trackId}`;
+  }
+
+  private mapSpotifyTrackResponse(
+    payload: SpotifyTrackResponse
+  ): ResolvedTrack {
+    return {
+      title: payload.name,
+      artists: payload.artists.map(({ name }) => name).join(', '),
+      artworkUrl: payload.album.images[0]?.url ?? '',
+      spotifyUri: payload.uri,
+    };
   }
 
   private isAbortError(error: unknown): boolean {

@@ -1,7 +1,7 @@
 export const FLIPBOOK_EXAMPLE_INPUT = [
   'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC,Rick',
   'https://open.spotify.com/track/0GjEhVFGZW8afUYGChu3Rr,Miri',
-  'https://open.spotify.com/track/1H61DWGuD5nk6ZAm6Jb92B,Grum',
+  'https://open.spotify.com/playlist/2SNR0Fi1oxGMcM740jamt4,Shared favorites',
   'https://open.spotify.com/track/1H5tvpoApNDxvxDexoaAUo,Hex',
   'https://open.spotify.com/track/7rIovIsXE6kMn629b7kDig,Fizz',
 ].join('\n');

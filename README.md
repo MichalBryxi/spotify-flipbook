@@ -2,7 +2,7 @@
 
 ![Spotify Flipbook preview](docs/preview.png)
 
-Spotify Flipbook is an [Ember app](https://emberjs.com) that runs entirely in the browser and turns Spotify tracks into printable cards. It uses third-party Spotify endpoints to resolve track metadata and generate Spotify scannable codes.
+Spotify Flipbook is an [Ember app](https://emberjs.com) that runs entirely in the browser and turns Spotify tracks or playlists into printable cards. It uses third-party Spotify endpoints to resolve track metadata and generate Spotify scannable codes.
 Each card contains:
 
 - Album artwork
@@ -57,16 +57,17 @@ Live app: `https://spotify-flipbook.netlify.app`.
 
 ## How to use it
 
-1. Paste one line per track in the left editor using this format:
+1. Paste one line per Spotify track or playlist in the left editor using this format:
 
 ```text
-spotifyTrackUrl,custom message
+spotifyTrackOrPlaylistUrl,custom message
 ```
 
-2. Example:
+2. Examples:
 
 ```text
 https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC,This one reminds me of our hike in Lauterbrunnen
+https://open.spotify.com/playlist/2SNR0Fi1oxGMcM740jamt4,For our roadtrip
 ```
 
 3. Click `Generate`.
@@ -79,6 +80,8 @@ The print layout is optimized for A4 output and hides editor controls so only th
 
 - Track metadata is resolved client-side through Spotify Web API when
   `SPOTIFY_ACCESS_TOKEN` is present at build time.
+- Playlist URLs require `SPOTIFY_ACCESS_TOKEN` because Spotify `oEmbed` cannot
+  return playlist track lists.
 - If no access token is configured or the API request fails, metadata falls
   back to Spotify's `oEmbed` endpoint.
 - Spotify scannable images are generated via:

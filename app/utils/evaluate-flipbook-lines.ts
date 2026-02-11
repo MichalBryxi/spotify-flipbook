@@ -31,7 +31,7 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
         severity: 'error',
         message: 'Line must contain a comma separating URL and custom message.',
         suggestion:
-          'Use the format spotifyTrackUrl,custom message on this line.',
+          'Use the format spotifyTrackOrPlaylistUrl,custom message on this line.',
         excerpt,
       });
 
@@ -56,8 +56,9 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
         lineNumber,
         code: 'MISSING_URL',
         severity: 'error',
-        message: 'Spotify track URL is missing before the comma.',
-        suggestion: 'Add a full Spotify track URL before the comma.',
+        message: 'Spotify URL is missing before the comma.',
+        suggestion:
+          'Add a full Spotify track or playlist URL before the comma.',
         excerpt,
       });
 
@@ -85,7 +86,7 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
         severity: 'error',
         message: 'URL is not valid and cannot be parsed.',
         suggestion:
-          'Use a full URL such as https://open.spotify.com/track/{id}.',
+          'Use a full Spotify URL such as https://open.spotify.com/track/{id}.',
         excerpt,
       });
 
@@ -102,14 +103,15 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
       return;
     }
 
-    if (!isSpotifyTrackUrl(parsedUrl)) {
+    if (!isSupportedSpotifyUrl(parsedUrl)) {
       const issue = buildIssue({
         lineNumber,
         code: 'UNSUPPORTED_SPOTIFY_TRACK_URL',
         severity: 'error',
-        message: 'Only Spotify track URLs are supported for flipbook cards.',
+        message:
+          'Only Spotify track and playlist URLs are supported for flipbook cards.',
         suggestion:
-          'Use an open.spotify.com/track/... URL for this line and keep the custom message after the comma.',
+          'Use an open.spotify.com/track/... or /playlist/... URL and keep the custom message after the comma.',
         excerpt,
       });
 
@@ -153,14 +155,21 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
   };
 }
 
-function isSpotifyTrackUrl(url: URL): boolean {
+function isSupportedSpotifyUrl(url: URL): boolean {
   if (!SPOTIFY_HOSTS.has(url.hostname)) {
     return false;
   }
 
   const segments = url.pathname.split('/').filter(Boolean);
 
-  return segments[0] === 'track' && typeof segments[1] === 'string';
+  const resource = segments[0];
+  const id = segments[1];
+
+  if (resource !== 'track' && resource !== 'playlist') {
+    return false;
+  }
+
+  return typeof id === 'string' && id.length > 0;
 }
 
 function buildExcerpt(line: string): string {
