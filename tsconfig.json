@@ -1,18 +1,29 @@
 {
   "extends": "@ember/app-tsconfig",
-  "include": ["app", "tests", "types"],
+  "include": [
+    "app",
+    "tests",
+    "types"
+  ],
   "compilerOptions": {
     "allowJs": true,
     "paths": {
-      "spotify-flipbook/tests/*": ["./tests/*"],
-      "spotify-flipbook/*": ["./app/*"],
-      "*": ["./types/*"]
+      "spotify-flipbook/tests/*": [
+        "./tests/*"
+      ],
+      "spotify-flipbook/*": [
+        "./app/*"
+      ],
+      "*": [
+        "./types/*"
+      ]
     },
     "types": [
       "ember-source/types",
       "@embroider/core/virtual",
       "vite/client",
-      "@glint/ember-tsc/types"
+      "@glint/ember-tsc/types",
+      "vite-plugin-pwa/client"
     ]
   }
 }
