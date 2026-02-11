@@ -15,7 +15,7 @@ export default class A4PagesComponent extends Component<A4PagesSignature> {
 
   <template>
     <section
-      class="cards-flow-grid grid grid-cols-2 gap-3"
+      class="cards-flow-grid grid grid-cols-3 gap-3"
       data-test-cards-grid
     >
       {{#each this.entries key="@index" as |entry|}}
