@@ -15,14 +15,6 @@ body {
   background: linear-gradient(145deg, #f8f7f4 0%, #eef4f8 100%);
 }
 
-.song-card-title {
-  min-height: 2.6em;
-  overflow: hidden;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
 .song-card-artists,
 .song-card-message {
   overflow: hidden;

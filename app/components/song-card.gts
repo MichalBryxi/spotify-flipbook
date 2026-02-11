@@ -29,25 +29,18 @@ export default class SongCardComponent extends Component<SongCardSignature> {
           <img
             src={{@entry.artworkUrl}}
             alt={{this.artworkAltText}}
-            class="h-36 w-36 shrink-0 rounded-sm object-cover"
+            class="w-full shrink-0 rounded-sm object-cover"
           />
           <h3
-            class="song-card-title mt-2 text-[9pt] font-normal leading-snug text-zinc-900"
+            class="mt-2 text-xs font-normal leading-snug text-zinc-900 line-clamp-1"
           >
             {{@entry.title}}
           </h3>
-          <p
-            class="song-card-artists mt-1 text-[8pt] leading-snug text-zinc-600"
-          >
-            {{@entry.artists}}
-          </p>
         </div>
 
-        <div
-          class="flex min-h-36 w-10 items-center justify-center overflow-hidden"
-        >
+        <div class="flex h-full items-center justify-center overflow-hidden">
           <p
-            class="max-w-none whitespace-nowrap text-[9pt] font-extrabold leading-none text-stone-600 uppercase rotate-90"
+            class="whitespace-nowrap text-lg font-extrabold text-stone-600 uppercase [writing-mode:vertical-lr]"
           >
             {{@entry.customText}}
           </p>
