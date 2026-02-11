@@ -67,8 +67,6 @@ export default class FlipbookPreviewComponent extends Component<FlipbookPreviewS
 
       <footer class="flex justify-end print:hidden">
         <Button
-          @appearance="outlined"
-          @intent="default"
           @onPress={{this.onPrint}}
           disabled={{this.isPrintDisabled}}
           data-test-print-button

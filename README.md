@@ -1,5 +1,7 @@
 # Spotify Flipbook
 
+![Spotify Flipbook preview](docs/preview.png)
+
 Spotify Flipbook is an [Ember app](https://emberjs.com) that turns Spotify tracks into printable cards.
 Each card contains:
 

@@ -117,7 +117,7 @@ export default class FlipbookEditorComponent extends Component<FlipbookEditorSig
         <textarea
           id="flipbook-input"
           class="h-full min-h-[24rem] w-full resize-y overflow-x-auto pl-14 pr-4 py-4 font-mono text-sm leading-6 whitespace-pre text-zinc-900 focus:outline-none"
-          rows="20"
+          rows="5"
           wrap="off"
           value={{@inputText}}
           data-test-input-textarea
