@@ -6,8 +6,9 @@ import type { ResolvedTrack } from 'spotify-flipbook/types/flipbook';
 
 type SpotifyOEmbedResponse = {
   title: string;
-  author_name: string;
+  author_name?: string;
   thumbnail_url: string;
+  iframe_url?: string;
 };
 
 type SpotifyTrackResponse = {
@@ -29,7 +30,7 @@ type SpotifyPlaylistResponse = {
 };
 
 type SpotifyInputResource = {
-  kind: 'track' | 'playlist';
+  kind: 'track' | 'playlist' | 'short';
   id: string;
 };
 
@@ -48,11 +49,17 @@ export default class SpotifyResolverService extends Service {
     const resource = this.extractResource(url);
 
     if (!resource) {
-      throw new Error('Only Spotify track and playlist URLs are supported');
+      throw new Error(
+        'Only Spotify track, playlist, and share link URLs are supported'
+      );
     }
 
     if (resource.kind === 'playlist') {
       return this.resolvePlaylist(resource.id, signal);
+    }
+
+    if (resource.kind === 'short') {
+      return this.resolveShortLink(resource.id, signal);
     }
 
     const trackId = resource.id;
@@ -103,6 +110,72 @@ export default class SpotifyResolverService extends Service {
 
     return {
       tracks: [track],
+      degradedReason: null,
+    };
+  }
+
+  private async resolveShortLink(
+    shortCode: string,
+    signal?: AbortSignal
+  ): Promise<ResolveTracksResult> {
+    const shortUrl = `https://open.spotify.com/s/${shortCode}`;
+    const payload = await this.requestOEmbed(shortUrl, signal);
+    const resolved = payload.iframe_url
+      ? this.extractEmbeddedResource(payload.iframe_url)
+      : null;
+
+    if (!resolved) {
+      throw new Error(
+        'Unable to determine the track or playlist behind this Spotify short link'
+      );
+    }
+
+    const oEmbedTrack = this.mapOEmbedResponse(
+      payload,
+      resolved.kind,
+      resolved.id
+    );
+    const accessToken = this.spotifyAccessToken;
+
+    if (accessToken) {
+      try {
+        const track =
+          resolved.kind === 'track'
+            ? await this.resolveTrackWithSpotifyApi(
+                resolved.id,
+                accessToken,
+                signal
+              )
+            : await this.resolvePlaylistWithSpotifyApi(
+                resolved.id,
+                accessToken,
+                signal
+              );
+
+        return {
+          tracks: [track],
+          degradedReason: null,
+        };
+      } catch (error) {
+        if (this.isAbortError(error)) {
+          throw error;
+        }
+
+        console.warn(
+          'Spotify Web API lookup failed for resolved short link, using oEmbed fallback',
+          error
+        );
+
+        return {
+          tracks: [oEmbedTrack],
+          degradedReason:
+            'Spotify Web API lookup failed, so metadata was resolved via oEmbed fallback.',
+        };
+      }
+    }
+
+    return {
+      tracks: [oEmbedTrack],
       degradedReason: null,
     };
   }
@@ -212,21 +285,9 @@ export default class SpotifyResolverService extends Service {
     playlistId: string,
     signal?: AbortSignal
   ): Promise<ResolvedTrack> {
-    const endpoint = new URL('https://open.spotify.com/oembed');
-    endpoint.searchParams.set('url', url);
+    const payload = await this.requestOEmbed(url, signal);
 
-    const payload = await this.requestJson<SpotifyOEmbedResponse>({
-      url: endpoint.toString(),
-      method: 'GET',
-      signal,
-    });
-
-    return {
-      title: payload.title,
-      artists: payload.author_name,
-      artworkUrl: payload.thumbnail_url,
-      spotifyUri: `spotify:playlist:${playlistId}`,
-    };
+    return this.mapOEmbedResponse(payload, 'playlist', playlistId);
   }
 
   private async resolveTrackWithOEmbed(
@@ -234,21 +295,62 @@ export default class SpotifyResolverService extends Service {
     trackId: string,
     signal?: AbortSignal
   ): Promise<ResolvedTrack> {
+    const payload = await this.requestOEmbed(url, signal);
+
+    return this.mapOEmbedResponse(payload, 'track', trackId);
+  }
+
+  private async requestOEmbed(
+    url: string,
+    signal?: AbortSignal
+  ): Promise<SpotifyOEmbedResponse> {
     const endpoint = new URL('https://open.spotify.com/oembed');
     endpoint.searchParams.set('url', url);
 
-    const payload = await this.requestJson<SpotifyOEmbedResponse>({
+    return this.requestJson<SpotifyOEmbedResponse>({
       url: endpoint.toString(),
       method: 'GET',
       signal,
     });
+  }
 
+  private mapOEmbedResponse(
+    payload: SpotifyOEmbedResponse,
+    kind: 'track' | 'playlist',
+    id: string
+  ): ResolvedTrack {
     return {
       title: payload.title,
-      artists: payload.author_name,
+      artists: payload.author_name ?? '',
       artworkUrl: payload.thumbnail_url,
-      spotifyUri: `spotify:track:${trackId}`,
+      spotifyUri: `spotify:${kind}:${id}`,
     };
+  }
+
+  private extractEmbeddedResource(
+    iframeUrl: string
+  ): { kind: 'track' | 'playlist'; id: string } | null {
+    let parsedUrl: URL;
+
+    try {
+      parsedUrl = new URL(iframeUrl);
+    } catch {
+      return null;
+    }
+
+    const segments = parsedUrl.pathname.split('/').filter(Boolean);
+    const kind = segments[1];
+    const id = segments[2];
+
+    if (
+      (kind === 'track' || kind === 'playlist') &&
+      typeof id === 'string' &&
+      id.length > 0
+    ) {
+      return { kind, id };
+    }
+
+    return null;
   }
 
   private get spotifyAccessToken(): string | null {
@@ -329,6 +431,7 @@ export default class SpotifyResolverService extends Service {
     const segments = pathname.split('/').filter(Boolean);
     const trackSegmentIndex = segments.indexOf('track');
     const playlistSegmentIndex = segments.indexOf('playlist');
+    const shortSegmentIndex = segments.indexOf('s');
 
     if (trackSegmentIndex >= 0) {
       const trackId = segments[trackSegmentIndex + 1];
@@ -348,6 +451,17 @@ export default class SpotifyResolverService extends Service {
         return {
           kind: 'playlist',
           id: playlistId,
+        };
+      }
+    }
+
+    if (shortSegmentIndex >= 0) {
+      const shortCode = segments[shortSegmentIndex + 1];
+
+      if (typeof shortCode === 'string' && shortCode.length > 0) {
+        return {
+          kind: 'short',
+          id: shortCode,
         };
       }
     }

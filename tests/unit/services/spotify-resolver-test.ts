@@ -6,8 +6,11 @@ import { setupTest } from 'spotify-flipbook/tests/helpers';
 const TRACK_URL = 'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC';
 const TRACK_URL_WITH_QUERY =
   'https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC?si=abc123&context=spotify%3Aplaylist%3Axyz';
+const TRACK_URL_WITH_LOCALE =
+  'https://open.spotify.com/intl-de/track/4uLU6hMCjMI75M1A2tKUQC?si=2fcafe3e57664fca';
 const PLAYLIST_URL =
   'https://open.spotify.com/playlist/2SNR0Fi1oxGMcM740jamt4?si=aa917f07c952491a';
+const SHORT_LINK_URL = 'https://open.spotify.com/s/OkesocH';
 
 module('Unit | Service | spotify-resolver', function (hooks) {
   setupTest(hooks);
@@ -351,7 +354,209 @@ module('Unit | Service | spotify-resolver', function (hooks) {
       service.resolveTracks(
         'https://podcastaddict.com/science-vs/episode/215465069'
       ),
-      /Only Spotify track and playlist URLs are supported/
+      /Only Spotify track, playlist, and share link URLs are supported/
     );
+  });
+
+  test('it resolves track URLs with a locale prefix', async function (assert) {
+    assert.expect(2);
+
+    this.owner.register(
+      'service:store',
+      class StoreStub extends Service {
+        requestManager = {
+          request: (requestConfig: { url: string }) => {
+            assert.strictEqual(
+              requestConfig.url,
+              `https://open.spotify.com/oembed?url=${encodeURIComponent(TRACK_URL)}`
+            );
+
+            return Promise.resolve({
+              request: requestConfig,
+              response: null,
+              content: {
+                title: 'Never Gonna Give You Up',
+                author_name: 'Rick Astley',
+                thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+              },
+            });
+          },
+        };
+      }
+    );
+
+    const service = this.owner.lookup('service:spotify-resolver');
+    const result = await service.resolveTracks(TRACK_URL_WITH_LOCALE);
+
+    assert.deepEqual(result, {
+      tracks: [
+        {
+          title: 'Never Gonna Give You Up',
+          artists: 'Rick Astley',
+          artworkUrl: 'https://i.scdn.co/image/cover.jpg',
+          spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+        },
+      ],
+      degradedReason: null,
+    });
+  });
+
+  test('it defaults artists to an empty string when oEmbed omits author_name', async function (assert) {
+    assert.expect(1);
+
+    this.owner.register(
+      'service:store',
+      class StoreStub extends Service {
+        requestManager = {
+          request: (requestConfig: { url: string }) => {
+            return Promise.resolve({
+              request: requestConfig,
+              response: null,
+              content: {
+                title: 'Never Gonna Give You Up',
+                thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+              },
+            });
+          },
+        };
+      }
+    );
+
+    const service = this.owner.lookup('service:spotify-resolver');
+    const result = await service.resolveTracks(TRACK_URL);
+
+    assert.deepEqual(result, {
+      tracks: [
+        {
+          title: 'Never Gonna Give You Up',
+          artists: '',
+          artworkUrl: 'https://i.scdn.co/image/cover.jpg',
+          spotifyUri: 'spotify:track:4uLU6hMCjMI75M1A2tKUQC',
+        },
+      ],
+      degradedReason: null,
+    });
+  });
+
+  test('it resolves a Spotify short link via oEmbed when access token is missing', async function (assert) {
+    assert.expect(2);
+
+    this.owner.register(
+      'service:store',
+      class StoreStub extends Service {
+        requestManager = {
+          request: (requestConfig: { url: string }) => {
+            assert.strictEqual(
+              requestConfig.url,
+              `https://open.spotify.com/oembed?url=${encodeURIComponent(SHORT_LINK_URL)}`
+            );
+
+            return Promise.resolve({
+              request: requestConfig,
+              response: null,
+              content: {
+                title: 'Voyage voyage',
+                thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+                iframe_url:
+                  'https://open.spotify.com/embed/track/2d8D7uk3tbAThjRkdfrx9c?si=abc&utm_source=oembed',
+              },
+            });
+          },
+        };
+      }
+    );
+
+    const service = this.owner.lookup('service:spotify-resolver');
+    const result = await service.resolveTracks(SHORT_LINK_URL);
+
+    assert.deepEqual(result, {
+      tracks: [
+        {
+          title: 'Voyage voyage',
+          artists: '',
+          artworkUrl: 'https://i.scdn.co/image/cover.jpg',
+          spotifyUri: 'spotify:track:2d8D7uk3tbAThjRkdfrx9c',
+        },
+      ],
+      degradedReason: null,
+    });
+  });
+
+  test('it resolves a Spotify short link through the Web API when an access token is set', async function (assert) {
+    assert.expect(3);
+
+    const appConfig = config.APP as Record<string, unknown> & {
+      spotifyAccessToken?: string;
+    };
+    appConfig.spotifyAccessToken = 'token-123';
+
+    this.owner.register(
+      'service:store',
+      class StoreStub extends Service {
+        requestManager = {
+          request: (requestConfig: { url: string; headers?: Headers }) => {
+            if (
+              requestConfig.url.startsWith('https://open.spotify.com/oembed')
+            ) {
+              assert.strictEqual(
+                requestConfig.url,
+                `https://open.spotify.com/oembed?url=${encodeURIComponent(SHORT_LINK_URL)}`
+              );
+
+              return Promise.resolve({
+                request: requestConfig,
+                response: null,
+                content: {
+                  title: 'Voyage voyage',
+                  thumbnail_url: 'https://i.scdn.co/image/cover.jpg',
+                  iframe_url:
+                    'https://open.spotify.com/embed/track/2d8D7uk3tbAThjRkdfrx9c?si=abc&utm_source=oembed',
+                },
+              });
+            }
+
+            if (
+              requestConfig.url ===
+              'https://api.spotify.com/v1/tracks/2d8D7uk3tbAThjRkdfrx9c'
+            ) {
+              assert.strictEqual(
+                requestConfig.headers?.get('Authorization'),
+                'Bearer token-123'
+              );
+
+              return Promise.resolve({
+                request: requestConfig,
+                response: null,
+                content: {
+                  name: 'Voyage voyage',
+                  uri: 'spotify:track:2d8D7uk3tbAThjRkdfrx9c',
+                  artists: [{ name: 'Desireless' }],
+                  album: {
+                    images: [{ url: 'https://i.scdn.co/image/high-res.jpg' }],
+                  },
+                },
+              });
+            }
+
+            throw new Error(`Unexpected request URL: ${requestConfig.url}`);
+          },
+        };
+      }
+    );
+
+    const service = this.owner.lookup('service:spotify-resolver');
+    const result = await service.resolveTracks(SHORT_LINK_URL);
+
+    assert.deepEqual(result, {
+      tracks: [
+        {
+          title: 'Voyage voyage',
+          artists: 'Desireless',
+          artworkUrl: 'https://i.scdn.co/image/high-res.jpg',
+          spotifyUri: 'spotify:track:2d8D7uk3tbAThjRkdfrx9c',
+        },
+      ],
+      degradedReason: null,
+    });
   });
 });

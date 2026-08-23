@@ -109,9 +109,9 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
         code: 'UNSUPPORTED_SPOTIFY_TRACK_URL',
         severity: 'error',
         message:
-          'Only Spotify track and playlist URLs are supported for flipbook cards.',
+          'Only Spotify track, playlist, and share link URLs are supported for flipbook cards.',
         suggestion:
-          'Use an open.spotify.com/track/... or /playlist/... URL and keep the custom message after the comma.',
+          'Use an open.spotify.com/track/..., /playlist/..., or /s/... URL and keep the custom message after the comma.',
         excerpt,
       });
 
@@ -155,6 +155,8 @@ export function evaluateFlipbookLines(rawText: string): LineEvaluationResult {
   };
 }
 
+const SUPPORTED_RESOURCE_SEGMENTS = ['track', 'playlist', 's'];
+
 function isSupportedSpotifyUrl(url: URL): boolean {
   if (!SPOTIFY_HOSTS.has(url.hostname)) {
     return false;
@@ -162,14 +164,17 @@ function isSupportedSpotifyUrl(url: URL): boolean {
 
   const segments = url.pathname.split('/').filter(Boolean);
 
-  const resource = segments[0];
-  const id = segments[1];
+  return SUPPORTED_RESOURCE_SEGMENTS.some((resource) => {
+    const index = segments.indexOf(resource);
 
-  if (resource !== 'track' && resource !== 'playlist') {
-    return false;
-  }
+    if (index < 0) {
+      return false;
+    }
 
-  return typeof id === 'string' && id.length > 0;
+    const id = segments[index + 1];
+
+    return typeof id === 'string' && id.length > 0;
+  });
 }
 
 function buildExcerpt(line: string): string {

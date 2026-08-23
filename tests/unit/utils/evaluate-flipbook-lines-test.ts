@@ -23,6 +23,25 @@ module('Unit | Utility | evaluate-flipbook-lines', function () {
     );
   });
 
+  test('it treats Spotify short links as valid input', function (assert) {
+    const input = 'https://open.spotify.com/s/OkesocH,short link';
+
+    const result = evaluateFlipbookLines(input);
+
+    assert.strictEqual(result.validEntries.length, 1);
+    assert.strictEqual(result.issues.length, 0);
+  });
+
+  test('it treats locale-prefixed Spotify URLs as valid input', function (assert) {
+    const input =
+      'https://open.spotify.com/intl-de/track/0KPa0UzIgH8VQZadXiLAJY?si=2fcafe3e57664fca,locale link';
+
+    const result = evaluateFlipbookLines(input);
+
+    assert.strictEqual(result.validEntries.length, 1);
+    assert.strictEqual(result.issues.length, 0);
+  });
+
   test('it ignores empty lines while preserving original line numbers', function (assert) {
     const input = [
       '',
